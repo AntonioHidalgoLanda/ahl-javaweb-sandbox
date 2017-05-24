@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -58,7 +59,7 @@ public class ProductController {
     }
     
     @RequestMapping("/pocdb")
-    String db(Map<String, Object> model) {
+    List<String> db(Map<String, Object> model) {
         try (Connection connection = connectionPool.getConnection()) {
           Statement stmt = connection.createStatement();
           // DO NOT COMMIT // stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
@@ -74,7 +75,7 @@ public class ProductController {
           }
 
           model.put("records", output);
-          return "db";
+          return output;
         } catch (Exception e) {
           model.put("message", e.getMessage());
           return "error "+  e.getMessage();
