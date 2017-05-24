@@ -69,8 +69,8 @@ public class ProductController {
           ArrayList<String> output = new ArrayList<String>();
           while (rs.next()) {
             output.add("{id:" + rs.getInt("id")
-                    + ", name:" + rs.getInt("name")
-                    + ", pageurl:" + rs.getInt("pageurl")+"}");
+                    + ", name:" + rs.getString("name")
+                    + ", pageurl:" + rs.getString("pageurl")+"}");
           }
 
           model.put("records", output);
