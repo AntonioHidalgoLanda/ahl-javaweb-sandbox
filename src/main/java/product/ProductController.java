@@ -78,7 +78,7 @@ public class ProductController {
           return output;
         } catch (Exception e) {
           model.put("message", e.getMessage());
-          return "error "+  e.getMessage();
+          return null;
         }
     }
     
