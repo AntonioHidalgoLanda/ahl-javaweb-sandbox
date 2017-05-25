@@ -17,68 +17,68 @@ CREATE TABLE igotit (
 );
 
 CREATE TABLE brand (
-  id,
-  name,
-  pageUrl,
-  planCode,
-  contactEmail,
-  contactPhone,
-  contactName
+  id SERIAL PRIMARY KEY,
+  name varchar (255) not null,
+  pageUrl varchar (255),
+  planCode varchar (10) not null default 'FREE', -- premium, or band-code of the service
+  contactEmail varchar (255),
+  contactPhone varchar (50),
+  contactName varchar (255)
 );
 
 CREATE TABLE reseller (
-  id,
-  name,
-  pageurl,
-  planCode,
-  contactEmail,
-  contactPhone,
-  contactName
+  id SERIAL PRIMARY KEY,
+  name varchar (255) not null,
+  pageUrl varchar (255),
+  planCode varchar (10) not null default 'FREE', -- premium, or band-code of the service
+  contactEmail varchar (255),
+  contactPhone varchar (50),
+  contactName varchar (255)
 );
 
 CREATE TABLE shoppingOnlineLink (
-  id,
-  url,
-  productId,
-  resellerId
+  id SERIAL PRIMARY KEY,
+  url varchar (255),
+  productId int4 not null references product(id),
+  resellerId int4 not null references reseller(id)
 );
 
 CREATE TABLE tag (
-  name,
-  igotitId
+  name varchar (255) not null,
+  igotitId int4 not null references igotit (id)
 );
 
 CREATE TABLE photo (
-  id,
-  localpath,
-  igotitId
+  id SERIAL PRIMARY KEY,
+  localpath varchar (255) not null,
+  igotitId int4 not null references igotit (id)
 );
 
 CREATE TABLE product (
-  id,
-  sku,
-  brandid,
-  brandedIgotitId, -- reference post from the brand (has priority)
-  name,
-  brandLink -- see the product in brand page
+  id SERIAL PRIMARY KEY,
+  sku varchar (255) not null,
+  brandid  int4 not null references brand (id),
+  brandedIgotitId int4 not null references igotit(id), -- reference post from the brand (has priority)
+  name varchar (255) not null,
+  brandLink varchar (255) -- see the product in brand page
 );
 
 CREATE TABLE store (
-  id,
-  resellerId,
-  numberStreet,
-  address1,
-  address2,
-  city,
-  stateProvince,
-  country,
-  postCode
-  contactEmail,
-  contactPhone,
-  contactName
+  id SERIAL PRIMARY KEY,
+  resellerId int4 not null references reseller(id),
+  numberStreet varchar (255),
+  address1 varchar (255),
+  address2 varchar (255),
+  city varchar (255),
+  stateProvince varchar (255),
+  country varchar (255),
+  postCode varchar (255) not null,
+  contactEmail varchar (255),
+  contactPhone varchar (255),
+  contactName varchar (255)
 );
 
 CREATE TABLE storeProduct (
-  productId,
-  storeId
+  productId int4 not null references product(id),
+  storeId int4 not null references store(id)
 );
