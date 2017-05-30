@@ -70,7 +70,7 @@ public class ProductController {
           
           ResultSet rs = stmt.executeQuery("SELECT id,name,pageurl FROM brand");
 
-          ArrayList<String> output = new ArrayList<String>();
+          ArrayList<String> output = new ArrayList<>();
           while (rs.next()) {
             output.add("{id:" + rs.getInt("id")
                     + ", name:" + rs.getString("name")
@@ -131,7 +131,7 @@ public class ProductController {
            @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
            @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
            @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
-           @RequestParam(value="avatarUrl", required=false) String avatarUrl,
+           @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl,
            Map<String, Object> model
              ) {
         int nRowUpdated = 0;
@@ -140,7 +140,7 @@ public class ProductController {
             if (!federationID.isEmpty() && !profileName.isEmpty() && !recoveryEmail.isEmpty()){
                 String updateString =
                     "INSERT INTO enduser " +
-                    "(federationId, profileName, recoveryEmail, avatarUrl)"+
+                    "(federationId, profileName, recoveryEmail, avatarUrl)" +
                     "(?, ?, ?, ?)" +
                     "RETURNING id";
 
