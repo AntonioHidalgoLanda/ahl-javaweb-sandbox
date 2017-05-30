@@ -195,12 +195,10 @@ public class ProductController {
     
     @RequestMapping(value = "/enduser", method = RequestMethod.GET) 
     public @ResponseBody Map<String, Object> getEnduser(
-           @RequestParam(value="id", required=true) int enduserID,
-           Map<String, Object> model
+           @RequestParam(value="id", required=true) int enduserID
              ) {
-        if (model == null){
-            model = new HashMap<>();
-        }
+        Map<String, Object> result = new HashMap<>();
+        
         try (Connection connection = connectionPool.getConnection()) {
           String qrySelect = "SELECT id,federationId,profileName,recoveryEmail,avatarUrl "
                         + "FROM enduser "
@@ -210,20 +208,20 @@ public class ProductController {
           ResultSet rs = stmt.executeQuery();
           
           while (rs.next()) {
-            model.put("enduserID",rs.getInt("id"));
-            model.put("federationId",rs.getString("federationId"));
-            model.put("profileName",rs.getString("profileName"));
-            model.put("recoveryEmail",rs.getString("recoveryEmail"));
-            model.put("avatarUrl",rs.getString("avatarUrl"));
+            result.put("enduserID",rs.getInt("id"));
+            result.put("federationId",rs.getString("federationId"));
+            result.put("profileName",rs.getString("profileName"));
+            result.put("recoveryEmail",rs.getString("recoveryEmail"));
+            result.put("avatarUrl",rs.getString("avatarUrl"));
             
             break;
           }
 
-          return model;
+          return result;
         } catch (Exception e) {
-          model.put("message", e.getMessage());
-          model.put("exception", e);
-          return model;
+          result.put("message", e.getMessage());
+          result.put("exception", e);
+          return result;
         }
     }
     
