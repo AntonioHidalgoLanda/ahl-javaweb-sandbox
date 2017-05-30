@@ -123,6 +123,7 @@ public class ProductController {
         return null;
     }
     
+    // Note that avatar needs to be managed.
     @RequestMapping(value = "/enduser", method = RequestMethod.POST) 
     public @ResponseBody int postEnduser(
            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
@@ -150,7 +151,7 @@ public class ProductController {
                     updateSql.setString(3, recoveryEmail);
                     updateSql.setString(4, avatarUrl);
 
-                    ResultSet rs = updateSql.executeQuery("INSERT ... RETURNING ID");
+                    ResultSet rs = updateSql.executeQuery();
                     rs.next();
                     nRowUpdated = rs.getInt(1);
 
@@ -163,6 +164,8 @@ public class ProductController {
         // update
         else {
             // TODO manage when fields do not change
+            // Use a map, Map<int,Object>  order,value
+            // Refactor in an SQL Wrapper (SELECT1,FIND,INSERT/UPDATE,DELETE,Merge)
             String updateString =
                 "UPDATE enduser " +
                 "SET federationId = ? , "+
@@ -191,7 +194,7 @@ public class ProductController {
     
     @RequestMapping(value = "/enduser", method = RequestMethod.GET) 
     public @ResponseBody Map<String, Object> getEnduser(
-           @RequestParam(value="id", required=true, defaultValue="") int enduserID,
+           @RequestParam(value="id", required=true) int enduserID,
            Map<String, Object> model
              ) {
         try (Connection connection = connectionPool.getConnection()) {
