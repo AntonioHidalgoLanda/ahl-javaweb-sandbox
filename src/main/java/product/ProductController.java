@@ -141,7 +141,7 @@ public class ProductController {
                 String updateString =
                     "INSERT INTO enduser " +
                     "(federationId, profileName, recoveryEmail, avatarUrl)" +
-                    "INTO (?, ?, ?, ?)" +
+                    " VALUES (?, ?, ?, ?)" +
                     "RETURNING id";
 
                 try (Connection connection = connectionPool.getConnection()){
