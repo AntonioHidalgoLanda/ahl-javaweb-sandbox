@@ -36,13 +36,6 @@ CREATE TABLE reseller (
   contactName varchar (255)
 );
 
-CREATE TABLE shoppingOnlineLink (
-  id SERIAL PRIMARY KEY,
-  url varchar (255),
-  productId int4 not null references product(id),
-  resellerId int4 not null references reseller(id)
-);
-
 CREATE TABLE tag (
   name varchar (255) not null,
   igotitId int4 not null references igotit (id)
@@ -63,6 +56,13 @@ CREATE TABLE product (
   brandLink varchar (255) -- see the product in brand page
 );
 
+
+CREATE TABLE shoppingOnlineLink (
+  id SERIAL PRIMARY KEY,
+  url varchar (255),
+  productId int4 not null references product(id),
+  resellerId int4 not null references reseller(id)
+);
 CREATE TABLE store (
   id SERIAL PRIMARY KEY,
   resellerId int4 not null references reseller(id),
