@@ -124,28 +124,68 @@ public class ProductController {
     }
     
     @RequestMapping(value = "/enduser", method = RequestMethod.POST) 
-    public @ResponseBody Map<String, Object> postEnduser(
+    public @ResponseBody int postEnduser(
            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
            @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
            @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
            @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
-           @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl,
+           @RequestParam(value="avatarUrl", required=false) String avatarUrl,
            Map<String, Object> model
              ) {
-        // if id == "" ==> (federationID !="" && profileName!="" && recoveryEmail!="")
-        // create
+        int nRowUpdated = 0;
+        // insert
         if (enduserID == -1){
             if (!federationID.isEmpty() && !profileName.isEmpty() && !recoveryEmail.isEmpty()){
-                
+                String updateString =
+                    "INSERT INTO enduser " +
+                    "(federationId, profileName, recoveryEmail, avatarUrl)"+
+                    "(?, ?, ?, ?)" +
+                    "RETURNING id";
+
+                try (Connection connection = connectionPool.getConnection()){
+                    PreparedStatement updateSql = connection.prepareStatement(updateString);
+
+                    updateSql.setString(1, federationID);
+                    updateSql.setString(2, profileName);
+                    updateSql.setString(3, recoveryEmail);
+                    updateSql.setString(4, avatarUrl);
+
+                    ResultSet rs = updateSql.executeQuery("INSERT ... RETURNING ID");
+                    rs.next();
+                    nRowUpdated = rs.getInt(1);
+
+                } catch (Exception e) {
+                    return -1;
+                }
             }
             // Esle error TODO
         }
-        // else
         // update
         else {
-            
+            // TODO manage when fields do not change
+            String updateString =
+                "UPDATE enduser " +
+                "SET federationId = ? , "+
+                " profileName = ? , "+
+                " recoveryEmail = ? , "+
+                " avatarUrl = ? "+
+                "WHERE id = ?";
+
+            try (Connection connection = connectionPool.getConnection()){
+                PreparedStatement updateSql = connection.prepareStatement(updateString);
+
+                updateSql.setString(1, federationID);
+                updateSql.setString(2, profileName);
+                updateSql.setString(3, recoveryEmail);
+                updateSql.setString(4, avatarUrl);
+                updateSql.setInt(5, enduserID);
+                
+                nRowUpdated = updateSql.executeUpdate();
+            } catch (Exception e) {
+                return -1;
+            }
         }
-        return null;
+        return nRowUpdated;
     }
     
     
