@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
@@ -125,7 +126,7 @@ public class ProductController {
     
     // Note that avatar needs to be managed.
     @RequestMapping(value = "/enduser", method = RequestMethod.POST) 
-    public @ResponseBody int postEnduser(
+    public @ResponseBody String postEnduser(
            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
            @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
            @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
@@ -156,7 +157,7 @@ public class ProductController {
                     nRowUpdated = rs.getInt(1);
 
                 } catch (Exception e) {
-                    return -1;
+                    return e.getMessage();
                 }
             }
             // Esle error TODO
@@ -185,10 +186,10 @@ public class ProductController {
                 
                 nRowUpdated = updateSql.executeUpdate();
             } catch (Exception e) {
-                return -1;
+                return e.getMessage();
             }
         }
-        return nRowUpdated;
+        return ""+nRowUpdated;
     }
     
     
@@ -197,6 +198,9 @@ public class ProductController {
            @RequestParam(value="id", required=true) int enduserID,
            Map<String, Object> model
              ) {
+        if (model == null){
+            model = new HashMap<>();
+        }
         try (Connection connection = connectionPool.getConnection()) {
           String qrySelect = "SELECT id,federationId,profileName,recoveryEmail,avatarUrl "
                         + "FROM enduser "
@@ -218,7 +222,8 @@ public class ProductController {
           return model;
         } catch (Exception e) {
           model.put("message", e.getMessage());
-          return null;
+          model.put("exception", e);
+          return model;
         }
     }
     
