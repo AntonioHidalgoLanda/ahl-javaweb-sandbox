@@ -115,7 +115,7 @@ public class ProductController {
             @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
             @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
             @RequestParam(value="rating", required=false, defaultValue="0") String rating,
-            @RequestParam(value="photos", required=false) List<Long> photos
+            @RequestParam(value="photos", required=false) List<Integer> photos
         ) {
         // if id == "" ==> enduser != ""
         // create
