@@ -6,22 +6,27 @@
 package datamediator;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
  * @author antonio
  */
 public interface SqlMediator {
+    public SqlMediator clear();
+    public SqlMediator setTable(String tablename);
     public SqlMediator addUpsertParam(String fieldname,String value);
     public SqlMediator addUpsertParam(String fieldname,double value);
     public SqlMediator addUpsertParam(String fieldname,int value);
     public SqlMediator addUpsertParam(String fieldname,Date value);
     public SqlMediator addId(String id);
     public SqlMediator addId(int id);
-    public SqlMediator addFindParam(String filename, String value,double weight);
-    public SqlMediator addFindParam(String filename, double value,double weight);
-    public SqlMediator addFindParam(String filename, int value,double weight);
-    public SqlMediator addFindParam(String filename, Date value,double weight);
+    public SqlMediator addFindField(String fieldname);
+    public SqlMediator addFindParam(String fieldname, String value,double weight);
+    public SqlMediator addFindParam(String fieldname, double value,double weight);
+    public SqlMediator addFindParam(String fieldname, int value,double weight);
+    public SqlMediator addFindParam(String fieldname, Date value,double weight);
     public String getId();
     /**
      * this.addUpsertParam()
@@ -34,9 +39,12 @@ public interface SqlMediator {
      */
     public SqlMediator runUpsert();
     /**
-     * this.addFindParam()
+     * this.addFindField(field1)
+     * ...
+     * this.addFindField(fieldN)
+     * this.addFindParam(Param1)
      * this....
-     * this.addFindParam()
+     * this.addFindParam(ParamN)
      * this.runFind()
      * 
      * or 
@@ -52,5 +60,5 @@ public interface SqlMediator {
      * @return this
      */
     public SqlMediator runDelete();
-    public SqlMediator setTable(String tablename);
+    public List<Map<String,Object>> getResultsFind();
 }
