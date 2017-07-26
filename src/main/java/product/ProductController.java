@@ -126,7 +126,7 @@ public class ProductController {
     }
     
     // Note that avatar needs to be managed.
-    @RequestMapping(value = "/enduser", method = RequestMethod.POST) 
+    @RequestMapping(value = "/enduserOld", method = RequestMethod.POST) 
     public @ResponseBody String postEnduser(
            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
            @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
@@ -194,7 +194,7 @@ public class ProductController {
     }
     
     
-    @RequestMapping(value = "/enduser", method = RequestMethod.GET) 
+    @RequestMapping(value = "/enduserOld", method = RequestMethod.GET) 
     public @ResponseBody Map<String, Object> getEnduser(
            @RequestParam(value="id", required=true) int enduserID
              ) {
