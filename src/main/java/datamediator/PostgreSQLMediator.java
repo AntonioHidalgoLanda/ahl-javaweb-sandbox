@@ -333,8 +333,9 @@ public class PostgreSQLMediator implements SqlMediator{
 
     @Override
     public SqlMediator runFind() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.runFind(Double.NaN);
     }
+    
 // TODO ORDER and top
     @Override
     public SqlMediator runFind(double threshold) {

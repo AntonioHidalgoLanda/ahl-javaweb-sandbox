@@ -5,6 +5,7 @@
  */
 package product;
 
+import datamediator.PostgreSQLMediator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
@@ -225,6 +226,85 @@ public class ProductController {
         }
     }
     
+    /** Find requests, the filters are ands, to get the full spectrum of a
+     * select, the ors are obtained joining to querie
+     * @param enduserID
+     * @param federationID
+     * @param profileName
+     * @param recoveryEmail
+     * @param avatarUrl
+     * @return s*/
+    @RequestMapping(value = "/endusers", method = RequestMethod.GET)
+    public @ResponseBody List<Map<String, Object>> getFindEndusers(
+            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
+           @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
+           @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
+           @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
+           @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        sm.setTable("enduser");
+        sm.addFindField("id");
+        sm.addFindField("federationId");
+        sm.addFindField("profileName");
+        sm.addFindField("recoveryEmail");
+        sm.addFindField("avatarUrl");
+        if (enduserID >= 0){
+            sm.addId(enduserID);
+        }
+        if (!federationID.isEmpty()){
+            sm.addFindParam("federationId", federationID, 1);
+        }
+        if (!profileName.isEmpty()){
+            sm.addFindParam("profileName", profileName, 1);
+        }
+        if (!recoveryEmail.isEmpty()){
+            sm.addFindParam("recoveryEmail", recoveryEmail, 1);
+        }
+        if (!avatarUrl.isEmpty()){
+            sm.addFindParam("avatarUrl", avatarUrl, 1);
+        }
+        sm.runFind();
+        return sm.getResultsFind();
+    }
+    
+    /** Find requests, the filters are ands, to get the full spectrum of a
+     * select, the ors are obtained joining to querie
+     * @param enduserID
+     * @param federationID
+     * @param profileName
+     * @param recoveryEmail
+     * @param avatarUrl
+     * @return s*/
+    @RequestMapping(value = "/enduser", method = RequestMethod.POST)
+    public @ResponseBody String getUpsertEndusers(
+            @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
+           @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
+           @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
+           @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
+           @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl
+    ){
+        
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        sm.setTable("enduser");
+        if (enduserID >= 0){
+            sm.addId(enduserID);
+        }
+        if (!federationID.isEmpty()){
+            sm.addUpsertParam("federationId", federationID);
+        }
+        if (!profileName.isEmpty()){
+            sm.addUpsertParam("profileName", profileName);
+        }
+        if (!recoveryEmail.isEmpty()){
+            sm.addUpsertParam("recoveryEmail", recoveryEmail);
+        }
+        if (!avatarUrl.isEmpty()){
+            sm.addUpsertParam("avatarUrl", avatarUrl);
+        }
+        sm.runUpsert();
+        return sm.getId();
+    }
 }
 
 
