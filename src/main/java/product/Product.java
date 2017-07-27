@@ -58,5 +58,5 @@ public class Product {
         this.brandID = brandID;
         return this;
     }
-    
+
 }
