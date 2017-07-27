@@ -269,6 +269,7 @@ public class ProductController {
         HashMap m = new HashMap<>();
         m.put("Query", sm.getLastQuery());
         result.add(m);
+        return result;
         //return sm.getResultsFind();
     }
     
