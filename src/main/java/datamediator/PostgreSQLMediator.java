@@ -212,7 +212,6 @@ public class PostgreSQLMediator implements SqlMediator{
             throws SQLException {
         int idx = list.indexOf(fieldname) + 1;
         if (this.mapStringParam.containsKey(fieldname)){
-            System.err.println("AHL: fieldname: "+fieldname+"; idx: "+idx+"; val: "+this.mapStringParam.get(fieldname));
             updateSql.setString(idx,this.mapStringParam.get(fieldname));
         }
         else if (this.mapIntParam.containsKey(fieldname)){
@@ -250,16 +249,15 @@ public class PostgreSQLMediator implements SqlMediator{
                     !this.mapDoubleParam.isEmpty() || !this.mapDateParam.isEmpty()){
                 String statementFields = " (";
                 String statementValues = ") VALUES (";
-                String statementClosing = ") Returning id";
+                String statementClosing = ") Returning id;";
                
-                this.lastQuery += statementFields + strListFields
-                        + statementValues + strListValues
+                this.lastQuery += statementFields + strListValues
+                        + statementValues + strListFields
                         + statementClosing;
                 try (Connection connection = this.connectionPool.getConnection()){
                     PreparedStatement updateSql = connection.prepareStatement(this.lastQuery);
                     
                     for (String fieldname : listParams){
-                        System.err.println("AHL: fieldname: "+fieldname);
                         this.addUpdateParameter(listParams, fieldname, updateSql);
                     }
 
