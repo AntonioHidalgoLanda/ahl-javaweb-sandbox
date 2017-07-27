@@ -62,30 +62,6 @@ public class ProductController {
         return new Product(sku, serialNumber,description, 0);
     }
     
-    @RequestMapping("/pocdb")
-    List<String> db(Map<String, Object> model) {
-        try (Connection connection = connectionPool.getConnection()) {
-          Statement stmt = connection.createStatement();
-          // DO NOT COMMIT // stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-          // DO NOT COMMIT // stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-          
-          ResultSet rs = stmt.executeQuery("SELECT id , name , pageurl FROM brand");
-
-          ArrayList<String> output = new ArrayList<>();
-          while (rs.next()) {
-            output.add("{id:" + rs.getInt("id")
-                    + ", name:" + rs.getString("name")
-                    + ", pageurl:" + rs.getString("pageurl")+"}");
-          }
-
-          model.put("records", output);
-          return output;
-        } catch (Exception e) {
-          model.put("message", e.getMessage());
-          return null;
-        }
-    }
-    
     @Bean
     public DataSource dataSource() throws SQLException, URISyntaxException {
         URI dbUri = new URI(System.getenv("DATABASE_URL"));
@@ -244,7 +220,7 @@ public class ProductController {
         sm.addFindField("name");
         sm.addFindField("pageurl");
         if (brandID >= 0){
-            sm.addId(brandID);
+            sm.addFindParam("id", brandID, 1);
         }
         if (!name.isEmpty()){
             sm.addFindParam("name", name, 1);

@@ -226,25 +226,7 @@ public class PostgreSQLMediator implements SqlMediator{
         
         return updateSql;
     }
-    
-    private Object getResult(String fieldname, ResultSet result)
-            throws SQLException {
-        if (this.mapStringParam.containsKey(fieldname)){
-            return result.getString(fieldname);
-        }
-        else if (this.mapIntParam.containsKey(fieldname)){
-            return result.getInt(fieldname);
-        }
-        else if (this.mapDoubleParam.containsKey(fieldname)){
-            return result.getDouble(fieldname);
-        }
-        else if (this.mapDateParam.containsKey(fieldname)){
-            return result.getDate(fieldname);
-        }
-        
-        return null;
-    }
-    
+
     private ArrayList<String> generateListParams(){
         int nParams = this.mapStringParam.keySet().size() +
                     this.mapIntParam.keySet().size() +
@@ -383,7 +365,6 @@ public class PostgreSQLMediator implements SqlMediator{
           while (rs.next()) {
             Map<String, Object> result = new HashMap<>();
             for (String fieldname : this.listFindFields){
-                //result.put(fieldname, this.getResult(fieldname, rs));
                 result.put(fieldname, rs.getObject(fieldname));
             }
             this.listFindResult.add(result);
