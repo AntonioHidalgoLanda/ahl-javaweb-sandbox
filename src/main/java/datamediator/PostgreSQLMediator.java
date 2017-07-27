@@ -230,7 +230,10 @@ public class PostgreSQLMediator implements SqlMediator{
     private Object getResult(String fieldname, ResultSet result)
             throws SQLException {
         if (this.mapStringParam.containsKey(fieldname)){
-            return result.getString(fieldname);
+            System.err.println("fieldname: " + fieldname);
+            String tmp = result.getString(fieldname);
+            System.err.println("value: " + tmp);
+            return tmp;
         }
         else if (this.mapIntParam.containsKey(fieldname)){
             return result.getInt(fieldname);
