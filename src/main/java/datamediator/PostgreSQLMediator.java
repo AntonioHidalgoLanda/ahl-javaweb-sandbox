@@ -229,6 +229,7 @@ public class PostgreSQLMediator implements SqlMediator{
     
     private Object getResult(String fieldname, ResultSet result)
             throws SQLException {
+            return result.getInt(fieldname);/*
         if (this.mapStringParam.containsKey(fieldname)){
             System.err.println("fieldname: " + fieldname);
             String tmp = result.getString(fieldname);
@@ -245,7 +246,7 @@ public class PostgreSQLMediator implements SqlMediator{
             return result.getDate(fieldname);
         }
         
-        return null;
+        return null;*/
     }
     
     private ArrayList<String> generateListParams(){
