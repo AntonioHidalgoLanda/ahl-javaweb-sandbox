@@ -295,7 +295,6 @@ public class PostgreSQLMediator implements SqlMediator{
                     updateSql.setInt(listParams.size()+1, this.nId);
                 }
                 
-                //nRowUpdated = 
                 updateSql.executeUpdate();
             } catch (Exception e) {
                 System.err.println(e);
