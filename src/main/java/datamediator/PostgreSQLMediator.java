@@ -368,12 +368,13 @@ public class PostgreSQLMediator implements SqlMediator{
             for (String fieldname : listParams){
                 this.addUpdateParameter(listParams, fieldname, stmt);
             }
-
-            if (this.nId < 0){
-                stmt.setString(listParams.size(), this.strId);
-            }
-            else{
-                stmt.setInt(listParams.size(), this.nId);
+            if (this.nId > -1 || !this.strId.isEmpty()){
+                if (this.nId < 0){
+                    stmt.setString(listParams.size(), this.strId);
+                }
+                else{
+                    stmt.setInt(listParams.size(), this.nId);
+                }
             }
                 
             ResultSet rs = stmt.executeQuery();
