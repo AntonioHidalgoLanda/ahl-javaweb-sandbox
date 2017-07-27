@@ -310,7 +310,7 @@ public class PostgreSQLMediator implements SqlMediator{
         // insert
         if (this.nId < 0 && this.strId.isEmpty()){
             this.runInsert(listParams);
-            
+            this.lastQuery+="; lp: "+listParams;
         }
         // update
         else {

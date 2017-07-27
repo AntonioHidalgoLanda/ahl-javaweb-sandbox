@@ -155,7 +155,7 @@ public class ProductController {
             sm.addUpsertParam("pageurl", pageurl);
         }
         sm.runUpsert();
-        return sm.getLastQuery();
+        return sm.getLastQuery() + " ; " + sm.getId();
         //return sm.getId();
     }
     
