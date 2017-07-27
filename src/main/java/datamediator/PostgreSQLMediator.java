@@ -289,16 +289,16 @@ public class PostgreSQLMediator implements SqlMediator{
                 }
                 
                 if (this.nId < 0){
-                    updateSql.setString(listParams.size(), this.strId);
+                    updateSql.setString(listParams.size()+1, this.strId);
                 }
                 else{
-                    updateSql.setInt(listParams.size(), this.nId);
+                    updateSql.setInt(listParams.size()+1, this.nId);
                 }
                 
                 //nRowUpdated = 
                 updateSql.executeUpdate();
             } catch (Exception e) {
-                //return e.getMessage();
+                System.err.println(e);
             }
             return this;
     }
