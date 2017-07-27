@@ -12,8 +12,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -101,107 +99,6 @@ public class ProductController {
         return null;
     }
     
-    // Note that avatar needs to be managed.
-    @RequestMapping(value = "/enduserOld", method = RequestMethod.POST) 
-    public @ResponseBody String postEnduser(
-           @RequestParam(value="id", required=false, defaultValue="-1") int enduserID,
-           @RequestParam(value="federationId", required=false, defaultValue="") String federationID,
-           @RequestParam(value="profileName", required=false, defaultValue="") String profileName,
-           @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
-           @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl,
-           Map<String, Object> model
-             ) {
-        int nRowUpdated = 0;
-        // insert
-        if (enduserID == -1){
-            if (!federationID.isEmpty() && !profileName.isEmpty() && !recoveryEmail.isEmpty()){
-                String updateString =
-                    "INSERT INTO enduser " +
-                    "(federationId, profileName, recoveryEmail, avatarUrl)" +
-                    " VALUES (?, ?, ?, ?)" +
-                    "RETURNING id";
-
-                try (Connection connection = connectionPool.getConnection()){
-                    PreparedStatement updateSql = connection.prepareStatement(updateString);
-
-                    updateSql.setString(1, federationID);
-                    updateSql.setString(2, profileName);
-                    updateSql.setString(3, recoveryEmail);
-                    updateSql.setString(4, avatarUrl);
-
-                    ResultSet rs = updateSql.executeQuery();
-                    rs.next();
-                    nRowUpdated = rs.getInt(1);
-
-                } catch (Exception e) {
-                    return e.getMessage();
-                }
-            }
-            // Esle error TODO
-        }
-        // update
-        else {
-            // TODO manage when fields do not change
-            // Use a map, Map<int,Object>  order,value
-            // Refactor in an SQL Wrapper (SELECT1,FIND,INSERT/UPDATE,DELETE,Merge)
-            String updateString =
-                "UPDATE enduser " +
-                "SET federationId = ? , "+
-                " profileName = ? , "+
-                " recoveryEmail = ? , "+
-                " avatarUrl = ? "+
-                "WHERE id = ?";
-
-            try (Connection connection = connectionPool.getConnection()){
-                PreparedStatement updateSql = connection.prepareStatement(updateString);
-
-                updateSql.setString(1, federationID);
-                updateSql.setString(2, profileName);
-                updateSql.setString(3, recoveryEmail);
-                updateSql.setString(4, avatarUrl);
-                updateSql.setInt(5, enduserID);
-                
-                nRowUpdated = updateSql.executeUpdate();
-            } catch (Exception e) {
-                return e.getMessage();
-            }
-        }
-        return ""+nRowUpdated;
-    }
-    
-    
-    @RequestMapping(value = "/enduserOld", method = RequestMethod.GET) 
-    public @ResponseBody Map<String, Object> getEnduser(
-           @RequestParam(value="id", required=true) int enduserID
-             ) {
-        Map<String, Object> result = new HashMap<>();
-        
-        try (Connection connection = connectionPool.getConnection()) {
-          String qrySelect = "SELECT id,federationId,profileName,recoveryEmail,avatarUrl "
-                        + "FROM enduser "
-                        + "WHERE id = ?";
-          PreparedStatement stmt = connection.prepareStatement(qrySelect);
-          stmt.setInt(1, enduserID);
-          ResultSet rs = stmt.executeQuery();
-          
-          while (rs.next()) {
-            result.put("enduserID",rs.getInt("id"));
-            result.put("federationId",rs.getString("federationId"));
-            result.put("profileName",rs.getString("profileName"));
-            result.put("recoveryEmail",rs.getString("recoveryEmail"));
-            result.put("avatarUrl",rs.getString("avatarUrl"));
-            
-            break;
-          }
-
-          return result;
-        } catch (Exception e) {
-          result.put("message", e.getMessage());
-          result.put("exception", e);
-          return result;
-        }
-    }
-    
     /** Find requests, the filters are ands, to get the full spectrum of a
      * select, the ors are obtained joining to querie
      * @param brandID
@@ -229,12 +126,36 @@ public class ProductController {
             sm.addFindParam("pageurl", pageurl, 1);
         }
         sm.runFind();
-        List<Map<String, Object>> result = sm.getResultsFind();
-        HashMap m = new HashMap<>();
-        m.put("Query", sm.getLastQuery());
-        result.add(m);
-        return result;
-        //return sm.getResultsFind();
+        return sm.getResultsFind();
+    }
+    
+    
+    /** Find requests, the filters are ands, to get the full spectrum of a
+     * select, the ors are obtained joining to querie
+     * @param brandID
+     * @param name
+     * @param pageurl
+     * @return s*/
+    @RequestMapping(value = "/brand", method = RequestMethod.POST)
+    public @ResponseBody String getUpsertBrand(
+            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
+           @RequestParam(value="name", required=false, defaultValue="") String name,
+           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+    ){
+        
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        sm.setTable("brand");
+        if (brandID >= 0){
+            sm.addId(brandID);
+        }
+        if (!name.isEmpty()){
+            sm.addUpsertParam("name", name);
+        }
+        if (!pageurl.isEmpty()){
+            sm.addUpsertParam("pageurl", pageurl);
+        }
+        sm.runUpsert();
+        return sm.getId();
     }
     
     
@@ -262,7 +183,7 @@ public class ProductController {
         sm.addFindField("recoveryEmail");
         sm.addFindField("avatarUrl");
         if (enduserID >= 0){
-            sm.addId(enduserID);
+            sm.addFindParam("id",enduserID, 1);
         }
         if (!federationID.isEmpty()){
             sm.addFindParam("federationId", federationID, 1);
