@@ -377,8 +377,8 @@ public class PostgreSQLMediator implements SqlMediator{
             }
                 
             ResultSet rs = stmt.executeQuery();
-            
-          
+
+
           while (rs.next()) {
             Map<String, Object> result = new HashMap<>();
             this.lastQuery += ", I";
@@ -388,6 +388,7 @@ public class PostgreSQLMediator implements SqlMediator{
             this.listFindResult.add(result);
           }
         } catch (Exception e) {
+            this.lastQuery += ";Error: "+e.getMessage();
             //return e.getMessage();
         }
         return this;
