@@ -228,6 +228,42 @@ public class ProductController {
     
     /** Find requests, the filters are ands, to get the full spectrum of a
      * select, the ors are obtained joining to querie
+     * @param brandID
+     * @param name
+     * @param pageurl
+     * @return s*/
+    @RequestMapping(value = "/brands", method = RequestMethod.GET)
+    public @ResponseBody List<Map<String, Object>> getFindBrands(
+            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
+           @RequestParam(value="name", required=false, defaultValue="") String name,
+           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        sm.setTable("brand");
+        sm.addFindField("id");
+        sm.addFindField("name");
+        sm.addFindField("pageurl");
+        if (brandID >= 0){
+            sm.addId(brandID);
+        }
+        if (!name.isEmpty()){
+            sm.addFindParam("name", name, 1);
+        }
+        if (!pageurl.isEmpty()){
+            sm.addFindParam("pageurl", pageurl, 1);
+        }
+        sm.runFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        HashMap m = new HashMap<>();
+        m.put("Query", sm.getLastQuery());
+        result.add(m);
+        return result;
+        //return sm.getResultsFind();
+    }
+    
+    
+    /** Find requests, the filters are ands, to get the full spectrum of a
+     * select, the ors are obtained joining to querie
      * @param enduserID
      * @param federationID
      * @param profileName
@@ -265,12 +301,7 @@ public class ProductController {
             sm.addFindParam("avatarUrl", avatarUrl, 1);
         }
         sm.runFind();
-        List<Map<String, Object>> result = sm.getResultsFind();
-        HashMap m = new HashMap<>();
-        m.put("Query", sm.getLastQuery());
-        result.add(m);
-        return result;
-        //return sm.getResultsFind();
+        return sm.getResultsFind();
     }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
