@@ -382,10 +382,9 @@ public class PostgreSQLMediator implements SqlMediator{
 
           while (rs.next()) {
             Map<String, Object> result = new HashMap<>();
-            this.lastQuery += ", I";/*
             for (String fieldname : this.listFindFields){
                 result.put(fieldname, this.getResult(fieldname, rs));
-            }*/
+            }
             this.listFindResult.add(result);
           }
         } catch (Exception e) {
