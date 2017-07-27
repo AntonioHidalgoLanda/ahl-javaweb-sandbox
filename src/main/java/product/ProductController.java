@@ -69,7 +69,7 @@ public class ProductController {
           // DO NOT COMMIT // stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
           // DO NOT COMMIT // stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
           
-          ResultSet rs = stmt.executeQuery("SELECT id,name,pageurl FROM brand");
+          ResultSet rs = stmt.executeQuery("SELECT id , name , pageurl FROM brand");
 
           ArrayList<String> output = new ArrayList<>();
           while (rs.next()) {
