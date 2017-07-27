@@ -33,6 +33,7 @@ public class PostgreSQLMediator implements SqlMediator{
     private String strId = "";
     private int nId = -1;
     private String tablename = "";
+    private String lastQuery = "";
 
     public PostgreSQLMediator(BasicDataSource connectionPool) {
         this.connectionPool = connectionPool;
@@ -42,6 +43,10 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator setTable(String tablename) {
         this.tablename = tablename;
         return this;
+    }
+    
+    public String getLastQuery(){
+        return this.lastQuery;
     }
     
     @Override
@@ -257,18 +262,18 @@ public class PostgreSQLMediator implements SqlMediator{
         int nNewId = 0;
             String strListFields = this.listOfQuestionMarks(listParams.size());
             String strListValues = this.listToCsvString(listParams);
-            String sqlStatement = "INSERT INTO " + this.tablename + " ";
+            this.lastQuery = "INSERT INTO " + this.tablename + " ";
             if (!this.mapStringParam.isEmpty() || !this.mapIntParam.isEmpty() ||
                     !this.mapDoubleParam.isEmpty() || !this.mapDateParam.isEmpty()){
                 String statementFields = " (";
                 String statementValues = ") VALUES (";
                 String statementClosing = ") Returning id";
                
-                sqlStatement += statementFields + strListFields
+                this.lastQuery += statementFields + strListFields
                         + statementValues + strListValues
                         + statementClosing;
                 try (Connection connection = this.connectionPool.getConnection()){
-                    PreparedStatement updateSql = connection.prepareStatement(sqlStatement);
+                    PreparedStatement updateSql = connection.prepareStatement(this.lastQuery);
                     
                     for (String fieldname : listParams){
                         this.addUpdateParameter(listParams, fieldname, updateSql);
@@ -288,13 +293,13 @@ public class PostgreSQLMediator implements SqlMediator{
     
     // TODO: These private methods depending on listParams should go in a different class
     private SqlMediator runUpdate(ArrayList<String> listParams){
-        String sqlStatement =
+        this.lastQuery =
                 "UPDATE " + this.tablename + " SET " 
                     + this.listOfPairs(listParams)
                     + "WHERE id = ?";
 
             try (Connection connection = this.connectionPool.getConnection()){
-                PreparedStatement updateSql = connection.prepareStatement(sqlStatement);
+                PreparedStatement updateSql = connection.prepareStatement(this.lastQuery);
 
                 for (String fieldname : listParams){
                     this.addUpdateParameter(listParams, fieldname, updateSql);
@@ -341,24 +346,24 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator runFind(double threshold) {
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
-        String qrySelect = "SELECT "
+        this.lastQuery = "SELECT "
                 + this.listToCsvString(this.listFindFields)
                 + " FROM " + this.tablename;
         if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
-            qrySelect += " WHERE ";
+            this.lastQuery += " WHERE ";
         }
         if (!listParams.isEmpty()){
-            qrySelect += this.listOfPairs(listParams, "AND");
+            this.lastQuery += this.listOfPairs(listParams, "AND");
         }
         if (this.nId > -1 || !this.strId.isEmpty()){
             if (!listParams.isEmpty()){
-                qrySelect += " AND ";
+                this.lastQuery += " AND ";
             }
-            qrySelect += " id = ? ";
+            this.lastQuery += " id = ? ";
         } 
 
         try (Connection connection = this.connectionPool.getConnection()){
-            PreparedStatement stmt = connection.prepareStatement(qrySelect);
+            PreparedStatement stmt = connection.prepareStatement(this.lastQuery);
 
             for (String fieldname : listParams){
                 this.addUpdateParameter(listParams, fieldname, stmt);
