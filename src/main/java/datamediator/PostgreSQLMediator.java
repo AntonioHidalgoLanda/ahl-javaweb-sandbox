@@ -389,7 +389,7 @@ public class PostgreSQLMediator implements SqlMediator{
           }
         } catch (Exception e) {
             this.lastQuery += ";Error: "+e.getMessage();
-            System.err.println(e.getMessage()+"; " + e.getCause().getStackTrace()[0].getLineNumber());
+            System.err.println(e);//e.getMessage()
         }
         return this;
     }
