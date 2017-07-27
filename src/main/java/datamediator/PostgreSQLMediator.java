@@ -266,6 +266,7 @@ public class PostgreSQLMediator implements SqlMediator{
                     nNewId = rs.getInt(1);
 
                 } catch (Exception e) {
+                    System.err.println(e);
                     //return e.getMessage();
                 }
             }
@@ -370,7 +371,6 @@ public class PostgreSQLMediator implements SqlMediator{
             this.listFindResult.add(result);
           }
         } catch (Exception e) {
-            this.lastQuery += ";Error: "+e.getMessage();
             System.err.println(e);//e.getMessage()
         }
         return this;
