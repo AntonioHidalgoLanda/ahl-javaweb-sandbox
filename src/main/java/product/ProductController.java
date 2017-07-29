@@ -112,10 +112,10 @@ public class ProductController {
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
-        sm.setTable("brand");
-        sm.addFindField("id");
-        sm.addFindField("name");
-        sm.addFindField("pageurl");
+        sm.setTable("brand")
+                .addFindField("id")
+                .addFindField("name")
+                .addFindField("pageurl");
         if (brandID >= 0){
             sm.addFindParam("id", brandID, 1);
         }
@@ -158,6 +158,21 @@ public class ProductController {
         return sm.getId();
     }
     
+    /** Find requests, the filters are ands, to get the full spectrum of a
+     * select, the ors are obtained joining to querie
+     * @param brandID
+     * @return s*/
+    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
+    public @ResponseBody String getDeleteBrand(
+            @RequestParam(value="id", required=true) int brandID
+    ){
+        
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        sm.setTable("brand")
+                .addFindParam("id", brandID, 1);
+        sm.runDelete();
+        return ""+brandID;
+    }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
      * select, the ors are obtained joining to querie
