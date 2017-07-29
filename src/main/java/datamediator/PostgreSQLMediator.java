@@ -376,7 +376,28 @@ public class PostgreSQLMediator implements SqlMediator{
 
     @Override
     public SqlMediator runDelete() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.listFindResult.clear();
+        ArrayList<String> listParams = generateListParams();
+        this.lastQuery =
+                "DELETE FROM " + this.tablename
+                    + " WHERE ";
+
+        if (!listParams.isEmpty()){
+            this.lastQuery += this.listOfPairs(listParams, "AND");
+        }
+                
+        try (Connection connection = this.connectionPool.getConnection()){
+            PreparedStatement updateSql = connection.prepareStatement(this.lastQuery);
+
+            for (String fieldname : listParams){
+                this.addUpdateParameter(listParams, fieldname, updateSql);
+            }
+
+            updateSql.executeUpdate();
+        } catch (Exception e) {
+            System.err.println(e);
+        }
+        return this;
     }
 
     @Override
