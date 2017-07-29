@@ -8,12 +8,8 @@ package product;
 import datamediator.PostgreSQLMediator;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
@@ -97,81 +93,6 @@ public class ProductController {
         // if enduser == "" ==> id != ""
         // update
         return null;
-    }
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brands", method = RequestMethod.GET)
-    public @ResponseBody List<Map<String, Object>> getFindBrands(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
-    ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
-        sm.setTable("brand")
-                .addFindField("id")
-                .addFindField("name")
-                .addFindField("pageurl");
-        if (brandID >= 0){
-            sm.addFindParam("id", brandID, 1);
-        }
-        if (!name.isEmpty()){
-            sm.addFindParam("name", name, 1);
-        }
-        if (!pageurl.isEmpty()){
-            sm.addFindParam("pageurl", pageurl, 1);
-        }
-        sm.runFind();
-        return sm.getResultsFind();
-    }
-    
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.POST)
-    public @ResponseBody String getUpsertBrand(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
-    ){
-        
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
-        sm.setTable("brand");
-        if (brandID >= 0){
-            sm.addId(brandID);
-        }
-        if (!name.isEmpty()){
-            sm.addUpsertParam("name", name);
-        }
-        if (!pageurl.isEmpty()){
-            sm.addUpsertParam("pageurl", pageurl);
-        }
-        sm.runUpsert();
-        return sm.getId();
-    }
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
-    public @ResponseBody String getDeleteBrand(
-            @RequestParam(value="id", required=true) int brandID
-    ){
-        
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
-        sm.setTable("brand")
-                .addFindParam("id", brandID, 1);
-        sm.runDelete();
-        return ""+brandID;
     }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
