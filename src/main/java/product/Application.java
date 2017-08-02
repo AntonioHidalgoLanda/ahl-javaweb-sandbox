@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean;
  *
  * @author antonio
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"service"})
 public class Application {
 
     public static void main(String[] args) {
