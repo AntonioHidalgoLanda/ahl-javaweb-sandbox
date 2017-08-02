@@ -5,16 +5,15 @@
  */
 package service;
 
+import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -27,24 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class BrandService {
-    private BasicDataSource connectionPool;
-    
-    @Bean
-    public DataSource dataSource() throws SQLException, URISyntaxException {
-        URI dbUri = new URI(System.getenv("DATABASE_URL"));
-        String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":"
-                + dbUri.getPort() + dbUri.getPath();
-        connectionPool = new BasicDataSource();
-
-        if (dbUri.getUserInfo() != null) {
-          connectionPool.setUsername(dbUri.getUserInfo().split(":")[0]);
-          connectionPool.setPassword(dbUri.getUserInfo().split(":")[1]);
-        }
-        connectionPool.setDriverClassName("org.postgresql.Driver");
-        connectionPool.setUrl(dbUrl);
-        connectionPool.setInitialSize(1);
-        return this.connectionPool;
-    }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
      * select, the ors are obtained joining to querie
@@ -58,7 +39,14 @@ public class BrandService {
            @RequestParam(value="name", required=false, defaultValue="") String name,
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        BasicDataSource connectorPool;
+        try {
+            connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+            return new ArrayList<>();
+        }
+        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
         sm.setTable("brand")
                 .addFindField("id")
                 .addFindField("name")
@@ -89,8 +77,14 @@ public class BrandService {
            @RequestParam(value="name", required=false, defaultValue="") String name,
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
-        
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        BasicDataSource connectorPool;
+        try {
+            connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+            return "";
+        }
+        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
         sm.setTable("brand");
         if (brandID >= 0){
             sm.addId(brandID);
@@ -113,8 +107,14 @@ public class BrandService {
     public @ResponseBody String getDeleteBrand(
             @RequestParam(value="id", required=true) int brandID
     ){
-        
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectionPool);
+        BasicDataSource connectorPool;
+        try {
+            connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+            return "";
+        }
+        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
         sm.setTable("brand")
                 .addFindParam("id", brandID, 1);
         sm.runDelete();
