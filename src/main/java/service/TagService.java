@@ -25,19 +25,17 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class BrandService {
+public class TagService {
+    /*
+CREATE TABLE tag (
+  name varchar (255) not null,
+  igotitId int4 not null references igotit (id)
+);*/
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brands", method = RequestMethod.GET)
+    @RequestMapping(value = "/tags", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="id", required=false, defaultValue="") String name,
+           @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
         BasicDataSource connectorPool;
         try {
@@ -47,35 +45,23 @@ public class BrandService {
             return new ArrayList<>();
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
-                .addFindField("id")
+        sm.setTable("tag")
                 .addFindField("name")
-                .addFindField("pageurl");
-        if (brandID >= 0){
-            sm.addFindParam("id", brandID, 1);
-        }
+                .addFindField("igotitId");
         if (!name.isEmpty()){
             sm.addFindParam("name", name, 1);
         }
-        if (!pageurl.isEmpty()){
-            sm.addFindParam("pageurl", pageurl, 1);
+        if (igotitId > 0){
+            sm.addFindParam("igotitId", igotitId, 1);
         }
         sm.runFind();
         return sm.getResultsFind();
     }
     
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.POST)
+    @RequestMapping(value = "/tag", method = RequestMethod.POST)
     public @ResponseBody String upsert(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="name", required=true) String name,
+           @RequestParam(value="igotitId", required=true) int igotitId
     ){
         BasicDataSource connectorPool;
         try {
@@ -85,27 +71,18 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand");
-        if (brandID >= 0){
-            sm.addId(brandID);
-        }
-        if (!name.isEmpty()){
-            sm.addUpsertParam("name", name);
-        }
-        if (!pageurl.isEmpty()){
-            sm.addUpsertParam("pageurl", pageurl);
-        }
+        sm.setTable("tag")
+                .addId(name)
+                .addUpsertParam("igotitId", igotitId);
         sm.runUpsert();
         return sm.getId();
     }
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
+    
+    @RequestMapping(value = "/tag", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
-            @RequestParam(value="id", required=true) int brandID
+            @RequestParam(value="name", required=true) String name,
+           @RequestParam(value="igotitId", required=true) int igotitId
     ){
         BasicDataSource connectorPool;
         try {
@@ -115,9 +92,11 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
-                .addFindParam("id", brandID, 1);
+        sm.setTable("name")
+                .addFindParam("name", name, 1)
+                .addFindParam("igotitId", igotitId, 1);
         sm.runDelete();
-        return ""+brandID;
+        return ""+name+":"+igotitId;
     }
+    
 }

@@ -25,19 +25,19 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class BrandService {
+public class ShoppingOnlineLinkService {
+    /*
+CREATE TABLE shoppingOnlineLink (
+  id SERIAL PRIMARY KEY,
+  url varchar (255),
+  productId int4 not null references product(id),
+  resellerId int4 not null references reseller(id)
+);*/
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brands", method = RequestMethod.GET)
+    @RequestMapping(value = "/shoppingOnlineLinks", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
+           @RequestParam(value="federationId", required=false, defaultValue="") String federationId
     ){
         BasicDataSource connectorPool;
         try {
@@ -47,35 +47,23 @@ public class BrandService {
             return new ArrayList<>();
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
+        sm.setTable("shoppingOnlineLink")
                 .addFindField("id")
-                .addFindField("name")
-                .addFindField("pageurl");
-        if (brandID >= 0){
-            sm.addFindParam("id", brandID, 1);
+                .addFindField("federationId");
+        if (shoppingOnlineLinkID >= 0){
+            sm.addFindParam("id", shoppingOnlineLinkID, 1);
         }
-        if (!name.isEmpty()){
-            sm.addFindParam("name", name, 1);
-        }
-        if (!pageurl.isEmpty()){
-            sm.addFindParam("pageurl", pageurl, 1);
+        if (!federationId.isEmpty()){
+            sm.addFindParam("federationId", federationId, 1);
         }
         sm.runFind();
         return sm.getResultsFind();
     }
     
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.POST)
+    @RequestMapping(value = "/shoppingOnlineLink", method = RequestMethod.POST)
     public @ResponseBody String upsert(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
+           @RequestParam(value="federationId", required=false, defaultValue="") String federationId
     ){
         BasicDataSource connectorPool;
         try {
@@ -85,27 +73,21 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand");
-        if (brandID >= 0){
-            sm.addId(brandID);
+        sm.setTable("shoppingOnlineLink");
+        if (shoppingOnlineLinkID >= 0){
+            sm.addId(shoppingOnlineLinkID);
         }
-        if (!name.isEmpty()){
-            sm.addUpsertParam("name", name);
-        }
-        if (!pageurl.isEmpty()){
-            sm.addUpsertParam("pageurl", pageurl);
+        if (!federationId.isEmpty()){
+            sm.addUpsertParam("federationId", federationId);
         }
         sm.runUpsert();
         return sm.getId();
     }
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
+    
+    @RequestMapping(value = "/shoppingOnlineLink", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
-            @RequestParam(value="id", required=true) int brandID
+            @RequestParam(value="id", required=true) int shoppingOnlineLinkID
     ){
         BasicDataSource connectorPool;
         try {
@@ -115,9 +97,9 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
-                .addFindParam("id", brandID, 1);
+        sm.setTable("shoppingOnlineLink")
+                .addFindParam("id", shoppingOnlineLinkID, 1);
         sm.runDelete();
-        return ""+brandID;
+        return ""+shoppingOnlineLinkID;
     }
 }
