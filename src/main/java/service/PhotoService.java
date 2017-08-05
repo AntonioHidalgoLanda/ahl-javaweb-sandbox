@@ -25,19 +25,20 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class BrandService {
+public class PhotoService {
+    /*
+CREATE TABLE photo (
+  id SERIAL PRIMARY KEY,
+  localpath varchar (255) not null,
+  igotitId int4 not null references igotit (id)
+);*/
+
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brands", method = RequestMethod.GET)
+    @RequestMapping(value = "/photos", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="id", required=false, defaultValue="-1") int photoID,
+           @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
+           @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
         BasicDataSource connectorPool;
         try {
@@ -47,35 +48,28 @@ public class BrandService {
             return new ArrayList<>();
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
+        sm.setTable("photo")
                 .addFindField("id")
-                .addFindField("name")
-                .addFindField("pageurl");
-        if (brandID >= 0){
-            sm.addFindParam("id", brandID, 1);
+                .addFindField("localpath")
+                .addFindField("igotitId");
+        if (photoID >= 0){
+            sm.addFindParam("id", photoID, 1);
         }
-        if (!name.isEmpty()){
-            sm.addFindParam("name", name, 1);
+        if (!localpath.isEmpty()){
+            sm.addFindParam("localpath", localpath, 1);
         }
-        if (!pageurl.isEmpty()){
-            sm.addFindParam("pageurl", pageurl, 1);
+        if (igotitId > 0){
+            sm.addFindParam("igotitId", igotitId, 1);
         }
         sm.runFind();
         return sm.getResultsFind();
     }
     
-    
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @param name
-     * @param pageurl
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.POST)
+    @RequestMapping(value = "/photo", method = RequestMethod.POST)
     public @ResponseBody String upsert(
-            @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
-           @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+            @RequestParam(value="id", required=false, defaultValue="-1") int photoID,
+           @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
+           @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
         BasicDataSource connectorPool;
         try {
@@ -85,27 +79,24 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand");
-        if (brandID >= 0){
-            sm.addId(brandID);
+        sm.setTable("photo");
+        if (photoID >= 0){
+            sm.addId(photoID);
         }
-        if (!name.isEmpty()){
-            sm.addUpsertParam("name", name);
+        if (!localpath.isEmpty()){
+            sm.addUpsertParam("localpath", localpath);
         }
-        if (!pageurl.isEmpty()){
-            sm.addUpsertParam("pageurl", pageurl);
+        if (igotitId > 0){
+            sm.addUpsertParam("igotitId", igotitId);
         }
         sm.runUpsert();
         return sm.getId();
     }
     
-    /** Find requests, the filters are ands, to get the full spectrum of a
-     * select, the ors are obtained joining to querie
-     * @param brandID
-     * @return s*/
-    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
+    
+    @RequestMapping(value = "/photo", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
-            @RequestParam(value="id", required=true) int brandID
+            @RequestParam(value="id", required=true) int photoID
     ){
         BasicDataSource connectorPool;
         try {
@@ -115,9 +106,9 @@ public class BrandService {
             return "";
         }
         PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
-        sm.setTable("brand")
-                .addFindParam("id", brandID, 1);
+        sm.setTable("photo")
+                .addFindParam("id", photoID, 1);
         sm.runDelete();
-        return ""+brandID;
+        return ""+photoID;
     }
 }
