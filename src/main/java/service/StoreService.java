@@ -49,6 +49,16 @@ CREATE TABLE storeProduct (
 );
 */
     
+    BasicDataSource connectorPool = null;
+    
+    StoreService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     @RequestMapping(value = "/stores", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int storeID,
@@ -64,14 +74,7 @@ CREATE TABLE storeProduct (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store")
                 .addFindField("id")
                 .addFindField("resellerId")
@@ -140,14 +143,7 @@ CREATE TABLE storeProduct (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store");
         if (storeID >= 0){
             sm.addId(storeID);
@@ -194,14 +190,7 @@ CREATE TABLE storeProduct (
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int storeID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store")
                 .addFindParam("id", storeID, 1);
         sm.runDelete();

@@ -34,19 +34,22 @@ CREATE TABLE shoppingOnlineLink (
   resellerId int4 not null references reseller(id)
 );*/
     
+    BasicDataSource connectorPool = null;
+    
+    ShoppingOnlineLinkService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     @RequestMapping(value = "/shoppingOnlineLinks", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
            @RequestParam(value="federationId", required=false, defaultValue="") String federationId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("shoppingOnlineLink")
                 .addFindField("id")
                 .addFindField("federationId");
@@ -65,14 +68,7 @@ CREATE TABLE shoppingOnlineLink (
             @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
            @RequestParam(value="federationId", required=false, defaultValue="") String federationId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("shoppingOnlineLink");
         if (shoppingOnlineLinkID >= 0){
             sm.addId(shoppingOnlineLinkID);
@@ -89,14 +85,7 @@ CREATE TABLE shoppingOnlineLink (
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int shoppingOnlineLinkID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("shoppingOnlineLink")
                 .addFindParam("id", shoppingOnlineLinkID, 1);
         sm.runDelete();

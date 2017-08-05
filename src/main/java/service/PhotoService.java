@@ -32,6 +32,16 @@ CREATE TABLE photo (
   localpath varchar (255) not null,
   igotitId int4 not null references igotit (id)
 );*/
+    
+    BasicDataSource connectorPool = null;
+    
+    PhotoService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
 
     
     @RequestMapping(value = "/photos", method = RequestMethod.GET)
@@ -47,7 +57,7 @@ CREATE TABLE photo (
             System.err.println(ex);
             return new ArrayList<>();
         }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
                 .addFindField("id")
                 .addFindField("localpath")
@@ -78,7 +88,7 @@ CREATE TABLE photo (
             System.err.println(ex);
             return "";
         }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo");
         if (photoID >= 0){
             sm.addId(photoID);
@@ -98,14 +108,7 @@ CREATE TABLE photo (
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int photoID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
                 .addFindParam("id", photoID, 1);
         sm.runDelete();

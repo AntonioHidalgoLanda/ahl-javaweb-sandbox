@@ -32,19 +32,22 @@ CREATE TABLE tag (
   igotitId int4 not null references igotit (id)
 );*/
     
+    BasicDataSource connectorPool = null;
+    
+    TagService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     @RequestMapping(value = "/tags", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="") String name,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
                 .addFindField("name")
                 .addFindField("igotitId");
@@ -63,14 +66,7 @@ CREATE TABLE tag (
             @RequestParam(value="name", required=true) String name,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
                 .addId(name)
                 .addUpsertParam("igotitId", igotitId);
@@ -84,14 +80,7 @@ CREATE TABLE tag (
             @RequestParam(value="name", required=true) String name,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("name")
                 .addFindParam("name", name, 1)
                 .addFindParam("igotitId", igotitId, 1);

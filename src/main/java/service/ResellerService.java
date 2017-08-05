@@ -36,6 +36,17 @@ CREATE TABLE reseller (
   contactPhone varchar (50),
   contactName varchar (255)
 );*/
+    
+    BasicDataSource connectorPool = null;
+    
+    ResellerService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     //  default 'FREE', -- premium, or band-code of the service
     @RequestMapping(value = "/resellers", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
@@ -47,14 +58,7 @@ CREATE TABLE reseller (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("reseller")
                 .addFindField("id")
                 .addFindField("name")
@@ -98,14 +102,7 @@ CREATE TABLE reseller (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("reseller");
         if (resellerID >= 0){
             sm.addId(resellerID);
@@ -134,14 +131,7 @@ CREATE TABLE reseller (
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int resellerID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("reseller")
                 .addFindParam("id", resellerID, 1);
         sm.runDelete();

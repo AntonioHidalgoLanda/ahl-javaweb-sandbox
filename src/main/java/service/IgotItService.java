@@ -30,6 +30,16 @@ import product.DatetimeHelper;
 @RestController
 public class IgotItService {
     
+    BasicDataSource connectorPool = null;
+    
+    IgotItService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitID,
@@ -40,14 +50,7 @@ public class IgotItService {
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
            @RequestParam(value="rating", required=false, defaultValue="10") int rating
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
                 .addFindField("id")
                 .addFindField("publishdate")
@@ -94,14 +97,7 @@ public class IgotItService {
             @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
             @RequestParam(value="rating", required=false, defaultValue="0") int rating
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit");
         if (igotitID >= 0){
             sm.addId(igotitID);
@@ -133,14 +129,7 @@ public class IgotItService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int igotitID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
                 .addFindParam("id", igotitID, 1);
         sm.runDelete();

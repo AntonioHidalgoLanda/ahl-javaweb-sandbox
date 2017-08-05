@@ -25,6 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class EndUserService {
+    
+    BasicDataSource connectorPool = null;
+    
+    EndUserService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
    
     @RequestMapping(value = "/endusers", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
@@ -34,14 +44,7 @@ public class EndUserService {
            @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
            @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("enduser")
                 .addFindField("id")
                 .addFindField("federationId")
@@ -75,14 +78,7 @@ public class EndUserService {
            @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
            @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("enduser");
         if (enduserID >= 0){
             sm.addId(enduserID);
@@ -108,14 +104,7 @@ public class EndUserService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int enduserID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("enduser")
                 .addFindParam("id", enduserID, 1);
         sm.runDelete();
