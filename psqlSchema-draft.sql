@@ -82,3 +82,8 @@ CREATE TABLE storeProduct (
   productId int4 not null references product(id),
   storeId int4 not null references store(id)
 );
+
+CREATE TABLE igotitProduct (
+  igotitId int4 not null references igotit (id),
+  productId int4 not null references product(id)
+);
