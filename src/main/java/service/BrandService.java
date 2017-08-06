@@ -27,6 +27,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class BrandService {
     
+    BasicDataSource connectorPool = null;
+    
+    BrandService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
+    
     /** Find requests, the filters are ands, to get the full spectrum of a
      * select, the ors are obtained joining to querie
      * @param brandID
@@ -39,14 +49,7 @@ public class BrandService {
            @RequestParam(value="name", required=false, defaultValue="") String name,
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("brand")
                 .addFindField("id")
                 .addFindField("name")
@@ -61,7 +64,11 @@ public class BrandService {
             sm.addFindParam("pageurl", pageurl, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            obj.put("productList", this.findProducts((Integer)obj.get("id")));
+        });
+        return result;
     }
     
     
@@ -77,14 +84,7 @@ public class BrandService {
            @RequestParam(value="name", required=false, defaultValue="") String name,
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("brand");
         if (brandID >= 0){
             sm.addId(brandID);
@@ -107,17 +107,60 @@ public class BrandService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int brandID
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("brand")
                 .addFindParam("id", brandID, 1);
         sm.runDelete();
         return ""+brandID;
     }
+    
+    // find products of a brand
+    public List<Integer> getProducts(int brandid){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("product")
+                .addFindField("id")
+                .addFindField("brandid")
+                .addFindParam("brandid", brandid, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    // find product of a brand API
+    @RequestMapping(value = "/brand/products", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findProducts(
+            @RequestParam(value="id", required=true) int brandID
+    ){
+        return this.getProducts(brandID);
+    }
+    
+    // enter a new record in catalog
+    @RequestMapping(value = "/brand/product", method = RequestMethod.POST)
+    public @ResponseBody String upsertProduct(
+           @RequestParam(value="id", required=true) int brandid,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("product");
+        sm.addId(productId)
+             .addUpsertParam("brandid", brandid);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    // delete a record from catalog
+    @RequestMapping(value = "/brand/product", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteProduct(
+           @RequestParam(value="id", required=true) int brandid,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        ProductService ps = new ProductService();
+        ps.delete(productId);
+        return ""+brandid+":"+productId;
+    }
+    
 }

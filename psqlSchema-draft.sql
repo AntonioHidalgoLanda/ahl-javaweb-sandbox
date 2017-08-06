@@ -85,5 +85,5 @@ CREATE TABLE storeProduct (
 
 CREATE TABLE igotitProduct (
   igotitId int4 not null references igotit (id),
-  storeId int4 not null references store(id)
+  productId int4 not null references product(id)
 );

@@ -27,27 +27,16 @@ import product.CountryHelper;
  */
 @RestController
 public class StoreService {
-    /*
-CREATE TABLE store (
-  id SERIAL PRIMARY KEY,
-  resellerId int4 not null references reseller(id),
-  numberStreet varchar (255),
-  address1 varchar (255),
-  address2 varchar (255),
-  city varchar (255),
-  stateProvince varchar (255),
-  country varchar (255),
-  postCode varchar (255) not null,
-  contactEmail varchar (255),
-  contactPhone varchar (255),
-  contactName varchar (255)
-);
-
-CREATE TABLE storeProduct (
-  productId int4 not null references product(id),
-  storeId int4 not null references store(id)
-);
-*/
+    
+    BasicDataSource connectorPool = null;
+    
+    StoreService(){
+        try {
+            this.connectorPool = DataSourceSingleton.getConnectionPool();
+        } catch (SQLException | URISyntaxException ex) {
+            System.err.println(ex);
+        }
+    }
     
     @RequestMapping(value = "/stores", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
@@ -64,14 +53,7 @@ CREATE TABLE storeProduct (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store")
                 .addFindField("id")
                 .addFindField("resellerId")
@@ -122,7 +104,11 @@ CREATE TABLE storeProduct (
             sm.addFindParam("contactName", contactName, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            obj.put("productList", this.findProducts((Integer)obj.get("id")));
+        });
+        return result;
     }
     
     @RequestMapping(value = "/store", method = RequestMethod.POST)
@@ -140,14 +126,7 @@ CREATE TABLE storeProduct (
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store");
         if (storeID >= 0){
             sm.addId(storeID);
@@ -189,22 +168,62 @@ CREATE TABLE storeProduct (
         return sm.getId();
     }
     
-    
     @RequestMapping(value = "/store", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
-            @RequestParam(value="id", required=true) int storeID
+            @RequestParam(value="id", required=true) int storeId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
-        PostgreSQLMediator sm = new PostgreSQLMediator(connectorPool);
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("store")
-                .addFindParam("id", storeID, 1);
+                .addFindParam("id", storeId, 1);
         sm.runDelete();
-        return ""+storeID;
+        return ""+storeId;
+    }
+    
+    public List<Integer> getProducts(int storeId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct")
+                .addFindField("productId")
+                .addFindField("storeId")
+                .addFindParam("storeId", storeId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("productId"));
+        });
+        return listInt;
+    }
+    
+    @RequestMapping(value = "/store/products", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findProducts(
+            @RequestParam(value="id", required=true) int storeId
+    ){
+        return this.getProducts(storeId);
+    }
+    
+    @RequestMapping(value = "/store/product", method = RequestMethod.POST)
+    public @ResponseBody String upsertProduct(
+           @RequestParam(value="id", required=true) int storeId,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct");
+        sm.addUpsertParam("productId", productId)
+          .addUpsertParam("storeId", storeId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/store/product", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteProduct(
+           @RequestParam(value="id", required=true) int storeId,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct")
+                .addFindParam("storeId", storeId, 1)
+                .addFindParam("productId", productId, 1);
+        sm.runDelete();
+        return ""+storeId+":"+productId;
     }
 }
