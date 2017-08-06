@@ -47,4 +47,42 @@
             <exec.executable>java</exec.executable>
         </properties>
     </action>
+    <action>
+            <actionName>build</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <Env.DATABASE_URL>postgres://xymsfoannggcax:0b0845b36e900f57553b511c50a73b5d23ba7ccf80c7f0ee635ecaccb34aad59@ec2-54-247-166-129.eu-west-1.compute.amazonaws.com:5432/daav9gnbu97q4k</Env.DATABASE_URL>
+            </properties>
+        </action>
+    <action>
+            <actionName>build-with-dependencies</actionName>
+            <reactor>also-make</reactor>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <Env.DATABASE_URL>postgres://xymsfoannggcax:0b0845b36e900f57553b511c50a73b5d23ba7ccf80c7f0ee635ecaccb34aad59@ec2-54-247-166-129.eu-west-1.compute.amazonaws.com:5432/daav9gnbu97q4k</Env.DATABASE_URL>
+            </properties>
+        </action>
+    <action>
+            <actionName>rebuild</actionName>
+            <packagings>
+                <packaging>*</packaging>
+            </packagings>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+            </goals>
+            <properties>
+                <Env.DATABASE_URL>postgres://xymsfoannggcax:0b0845b36e900f57553b511c50a73b5d23ba7ccf80c7f0ee635ecaccb34aad59@ec2-54-247-166-129.eu-west-1.compute.amazonaws.com:5432/daav9gnbu97q4k</Env.DATABASE_URL>
+            </properties>
+        </action>
 </actions>
