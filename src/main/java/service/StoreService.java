@@ -104,7 +104,11 @@ public class StoreService {
             sm.addFindParam("contactName", contactName, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            obj.put("productList", this.findProducts((Integer)obj.get("id")));
+        });
+        return result;
     }
     
     @RequestMapping(value = "/store", method = RequestMethod.POST)

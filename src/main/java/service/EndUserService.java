@@ -67,7 +67,11 @@ public class EndUserService {
             sm.addFindParam("avatarUrl", avatarUrl, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            obj.put("igotitList", this.findIgotits((Integer)obj.get("id")));
+        });
+        return result;
     }
     
     @RequestMapping(value = "/enduser", method = RequestMethod.POST)

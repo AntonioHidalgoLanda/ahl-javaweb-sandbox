@@ -79,7 +79,13 @@ public class ResellerService {
             sm.addFindParam("contactName", contactName, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            int id = (Integer)obj.get("id");
+            obj.put("storeList", this.findStore(id));
+            obj.put("shoppingOnlineLinkList", this.findShoppingOnlineLink(id));
+        });
+        return result;
     }
     
     @RequestMapping(value = "/reseller", method = RequestMethod.POST)

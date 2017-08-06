@@ -81,7 +81,14 @@ public class IgotItService {
             sm.addFindParam("rating", rating, 1);
         }
         sm.runFind();
-        return sm.getResultsFind();
+        List<Map<String, Object>> result = sm.getResultsFind();
+        result.stream().forEach((obj) -> {
+            int id = (Integer)obj.get("id");
+            obj.put("photoList", this.findPhotos(id));
+            obj.put("productList", this.findProducts(id));
+            obj.put("tagList", this.findTags(id));
+        });
+        return result;
     }
     
     
