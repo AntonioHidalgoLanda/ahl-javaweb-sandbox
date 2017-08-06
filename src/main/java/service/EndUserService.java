@@ -99,7 +99,6 @@ public class EndUserService {
         return sm.getId();
     }
     
-    
     @RequestMapping(value = "/enduser", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int enduserID
@@ -109,5 +108,50 @@ public class EndUserService {
                 .addFindParam("id", enduserID, 1);
         sm.runDelete();
         return ""+enduserID;
+    }
+    
+    public List<Integer> getIgotits(int enduserid){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotit")
+                .addFindField("id")
+                .addFindField("enduserid")
+                .addFindParam("enduserid", enduserid, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    @RequestMapping(value = "/enduser/igotits", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findIgotits(
+            @RequestParam(value="id", required=true) int enduserid
+    ){
+        return this.getIgotits(enduserid);
+    }
+    
+    @RequestMapping(value = "/enduser/igotit", method = RequestMethod.POST)
+    public @ResponseBody String upsertIgotit(
+           @RequestParam(value="id", required=true) int enduserid,
+           @RequestParam(value="igotitId", required=true) int igotitId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotit");
+        sm.addId(igotitId)
+             .addUpsertParam("enduserid", enduserid);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteIgotit(
+           @RequestParam(value="id", required=true) int enduserid,
+           @RequestParam(value="igotitId", required=true) int igotitId
+    ){
+        IgotItService ps = new IgotItService();
+        ps.delete(igotitId);
+        return ""+enduserid+":"+igotitId;
     }
 }

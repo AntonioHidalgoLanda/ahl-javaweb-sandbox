@@ -9,7 +9,6 @@ import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -26,13 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class ShoppingOnlineLinkService {
-    /*
-CREATE TABLE shoppingOnlineLink (
-  id SERIAL PRIMARY KEY,
-  url varchar (255),
-  productId int4 not null references product(id),
-  resellerId int4 not null references reseller(id)
-);*/
     
     BasicDataSource connectorPool = null;
     

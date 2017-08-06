@@ -42,7 +42,7 @@ public class IgotItService {
     
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
-            @RequestParam(value="id", required=false, defaultValue="-1") int igotitID,
+            @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
            @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
            @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
            @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
@@ -59,8 +59,8 @@ public class IgotItService {
                 .addFindField("usercomment")
                 .addFindField("coordinates")
                 .addFindField("rating");
-        if (igotitID >= 0){
-            sm.addFindParam("id", igotitID, 1);
+        if (igotitId >= 0){
+            sm.addFindParam("id", igotitId, 1);
         }
         if (!DatetimeHelper.isNoDate(publishdate)){
             sm.addFindParam("publishdate", publishdate, 1);
@@ -89,7 +89,7 @@ public class IgotItService {
     // we strore UCD
     @RequestMapping(value = "/igotit", method = RequestMethod.POST)
     public @ResponseBody String upsert(
-            @RequestParam(value="id", required=false, defaultValue="-1") int igotitID,
+            @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
             @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
             @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
             @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
@@ -99,8 +99,8 @@ public class IgotItService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit");
-        if (igotitID >= 0){
-            sm.addId(igotitID);
+        if (igotitId >= 0){
+            sm.addId(igotitId);
         }
         if (!DatetimeHelper.isNoDate(publishdate)){
             sm.addUpsertParam("publishdate",publishdate );
@@ -127,12 +127,150 @@ public class IgotItService {
     
     @RequestMapping(value = "/igotit", method = RequestMethod.DELETE)
     public @ResponseBody String delete(
-            @RequestParam(value="id", required=true) int igotitID
+            @RequestParam(value="id", required=true) int igotitId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
-                .addFindParam("id", igotitID, 1);
+                .addFindParam("id", igotitId, 1);
         sm.runDelete();
-        return ""+igotitID;
+        return ""+igotitId;
+    }
+    
+    public List<Integer> getPhotos(int igotitId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("photo")
+                .addFindField("id")
+                .addFindField("igotitId")
+                .addFindParam("igotitId", igotitId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    public List<Integer> getProducts(int igotitId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct")
+                .addFindField("igotitId")
+                .addFindField("productId")
+                .addFindParam("igotitId", igotitId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("productId"));
+        });
+        return listInt;
+    }
+    
+    public List<String> getTags(int igotitId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("tag")
+                .addFindField("name")
+                .addFindField("igotitId")
+                .addFindParam("igotitId", igotitId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<String> listStr = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listStr.add(obj.get("name").toString());
+        });
+        return listStr;
+    }
+    
+    @RequestMapping(value = "/igotit/photos", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findPhotos(
+            @RequestParam(value="id", required=true) int igotitId
+    ){
+        return this.getPhotos(igotitId);
+    }
+    
+    @RequestMapping(value = "/igotit/products", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findProducts(
+            @RequestParam(value="id", required=true) int igotitId
+    ){
+        return this.getProducts(igotitId);
+    }
+    
+    @RequestMapping(value = "/igotit/tags", method = RequestMethod.GET)
+    public @ResponseBody List<String> findTags(
+            @RequestParam(value="id", required=true) int igotitId
+    ){
+        return this.getTags(igotitId);
+    }
+    
+    @RequestMapping(value = "/igotit/photo", method = RequestMethod.POST)
+    public @ResponseBody String upsertPhoto(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="photoId", required=true) int photoId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("photo");
+        sm.addId(photoId)
+             .addUpsertParam("igotitId", igotitId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/igotit/product", method = RequestMethod.POST)
+    public @ResponseBody String upsertProduct(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct");
+        sm.addUpsertParam("productId", productId)
+          .addUpsertParam("igotitId", igotitId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/igotit/tag", method = RequestMethod.POST)
+    public @ResponseBody String upsertTag(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="tag", required=true) String tag
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("tag");
+        sm.addUpsertParam("name",tag)
+             .addUpsertParam("igotitId", igotitId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/igotit/photo", method = RequestMethod.DELETE)
+    public @ResponseBody String deletePhoto(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="photoId", required=true) int photoId
+    ){
+        PhotoService ps = new PhotoService();
+        ps.delete(photoId);
+        return ""+igotitId+":"+photoId;
+    }
+    
+    @RequestMapping(value = "/igotit/product", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteProduct(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="productId", required=true) int productId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct")
+                .addFindParam("igotitId", igotitId, 1)
+                .addFindParam("productId", productId, 1);
+        sm.runDelete();
+        return ""+igotitId+":"+productId;
+    }
+    
+    @RequestMapping(value = "/igotit/tag", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteTag(
+           @RequestParam(value="id", required=true) int igotitId,
+           @RequestParam(value="tag", required=true) String tag
+    ){
+        TagService ts = new TagService();
+        ts.delete(tag,igotitId);
+        return ""+igotitId+":"+tag;
     }
 }

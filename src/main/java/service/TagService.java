@@ -9,7 +9,6 @@ import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -26,11 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class TagService {
-    /*
-CREATE TABLE tag (
-  name varchar (255) not null,
-  igotitId int4 not null references igotit (id)
-);*/
     
     BasicDataSource connectorPool = null;
     

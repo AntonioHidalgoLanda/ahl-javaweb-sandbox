@@ -26,12 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class PhotoService {
-    /*
-CREATE TABLE photo (
-  id SERIAL PRIMARY KEY,
-  localpath varchar (255) not null,
-  igotitId int4 not null references igotit (id)
-);*/
     
     BasicDataSource connectorPool = null;
     
@@ -50,13 +44,6 @@ CREATE TABLE photo (
            @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return new ArrayList<>();
-        }
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
                 .addFindField("id")
@@ -81,13 +68,6 @@ CREATE TABLE photo (
            @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        BasicDataSource connectorPool;
-        try {
-            connectorPool = DataSourceSingleton.getConnectionPool();
-        } catch (SQLException | URISyntaxException ex) {
-            System.err.println(ex);
-            return "";
-        }
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo");
         if (photoID >= 0){

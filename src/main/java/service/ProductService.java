@@ -26,20 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class ProductService {
-    /*
-CREATE TABLE product (
-  id SERIAL PRIMARY KEY,
-  sku varchar (255) not null,
-  brandid  int4 not null references brand (id),
-  brandedIgotitId int4 not null references igotit(id), -- reference post from the brand (has priority)
-  name varchar (255) not null,
-  brandLink varchar (255) -- see the product in brand page
-);
-
-CREATE TABLE storeProduct (
-  productId int4 not null references product(id),
-  storeId int4 not null references store(id)
-);*/
     
     BasicDataSource connectorPool = null;
     
@@ -134,4 +120,146 @@ CREATE TABLE storeProduct (
         sm.runDelete();
         return ""+productID;
     }
+    
+    public List<Integer> getShoppingOnlineLink(int productId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("shoppingOnlineLink")
+                .addFindField("id")
+                .addFindField("productId")
+                .addFindParam("productId", productId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    public List<Integer> getStore(int productId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct")
+                .addFindField("storeId")
+                .addFindField("productId")
+                .addFindParam("productId", productId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("storeId"));
+        });
+        return listInt;
+    }
+    
+    public List<Integer> getIgotit(int productId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct")
+                .addFindField("igotitId")
+                .addFindField("productId")
+                .addFindParam("productId", productId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("igotitId"));
+        });
+        return listInt;
+    }
+    
+    @RequestMapping(value = "/product/shoppingOnlineLinks", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findShoppingOnlineLink(
+            @RequestParam(value="id", required=true) int productId
+    ){
+        return this.getShoppingOnlineLink(productId);
+    }
+    
+    @RequestMapping(value = "/product/stores", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findStore(
+            @RequestParam(value="id", required=true) int productId
+    ){
+        return this.getStore(productId);
+    }
+    
+    @RequestMapping(value = "/product/igotits", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findIgotit(
+            @RequestParam(value="id", required=true) int productId
+    ){
+        return this.getIgotit(productId);
+    }
+    
+    @RequestMapping(value = "/product/shoppingOnlineLink", method = RequestMethod.POST)
+    public @ResponseBody String upsertShoppingOnlineLink(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="shoppingOnlineLinkId", required=true) int shoppingOnlineLinkId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("shoppingOnlineLink");
+        sm.addId(shoppingOnlineLinkId)
+             .addUpsertParam("productId", productId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/product/store", method = RequestMethod.POST)
+    public @ResponseBody String upsertStore(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="storeId", required=true) int storeId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct");
+        sm.addUpsertParam("storeId", storeId)
+          .addUpsertParam("productId", productId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/product/igotit", method = RequestMethod.POST)
+    public @ResponseBody String upsertIgotit(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="igotitId", required=true) int igotitId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct");
+        sm.addUpsertParam("igotitId", igotitId)
+          .addUpsertParam("productId", productId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/product/shoppingOnlineLink", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteShoppingOnlineLink(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="shoppingOnlineLinkId", required=true) int shoppingOnlineLinkId
+    ){
+        IgotItService ps = new IgotItService();
+        ps.delete(shoppingOnlineLinkId);
+        return ""+productId+":"+shoppingOnlineLinkId;
+    }
+    
+    @RequestMapping(value = "/product/store", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteStore(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="storeId", required=true) int storeId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct")
+                .addFindParam("storeId", storeId, 1)
+                .addFindParam("productId", productId, 1);
+        sm.runDelete();
+        return ""+productId+":"+storeId;
+    }
+    
+    @RequestMapping(value = "/product/igotit", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteIgotit(
+           @RequestParam(value="id", required=true) int productId,
+           @RequestParam(value="igotitId", required=true) int igotitId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct")
+                .addFindParam("igotitId", igotitId, 1)
+                .addFindParam("productId", productId, 1);
+        sm.runDelete();
+        return ""+productId+":"+igotitId;
+    }
+    
 }

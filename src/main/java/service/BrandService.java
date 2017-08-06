@@ -125,13 +125,13 @@ public class BrandService {
         List<Map<String, Object>> listObject = sm.getResultsFind();
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
-            listInt.add((Integer)obj.get("brandid"));
+            listInt.add((Integer)obj.get("id"));
         });
         return listInt;
     }
     
     // find product of a brand API
-    @RequestMapping(value = "/brandProducts", method = RequestMethod.GET)
+    @RequestMapping(value = "/brand/products", method = RequestMethod.GET)
     public @ResponseBody List<Integer> findProducts(
             @RequestParam(value="id", required=true) int brandID
     ){
@@ -139,31 +139,28 @@ public class BrandService {
     }
     
     // enter a new record in catalog
-    @RequestMapping(value = "/brand", method = RequestMethod.POST)
+    @RequestMapping(value = "/brand/product", method = RequestMethod.POST)
     public @ResponseBody String upsertProduct(
            @RequestParam(value="id", required=true) int brandid,
-           @RequestParam(value="productid", required=true) int productid
+           @RequestParam(value="productId", required=true) int productId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("product");
-        sm.addId(productid)
+        sm.addId(productId)
              .addUpsertParam("brandid", brandid);
         sm.runUpsert();
         return sm.getId();
     }
     
     // delete a record from catalog
-    @RequestMapping(value = "/brand", method = RequestMethod.DELETE)
-    public @ResponseBody String delete(
+    @RequestMapping(value = "/brand/product", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteProduct(
            @RequestParam(value="id", required=true) int brandid,
-           @RequestParam(value="productid", required=true) int productid
+           @RequestParam(value="productId", required=true) int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("product")
-                .addFindParam("id", productid, 1)
-                .addFindParam("brandid", brandid, 1);
-        sm.runDelete();
-        return ""+brandid+":"+productid;
+        ProductService ps = new ProductService();
+        ps.delete(productId);
+        return ""+brandid+":"+productId;
     }
     
 }

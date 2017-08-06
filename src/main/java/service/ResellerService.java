@@ -26,16 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class ResellerService {
-    /*
-CREATE TABLE reseller (
-  id SERIAL PRIMARY KEY,
-  name varchar (255) not null,
-  pageUrl varchar (255),
-  planCode varchar (10) not null default 'FREE', -- premium, or band-code of the service
-  contactEmail varchar (255),
-  contactPhone varchar (50),
-  contactName varchar (255)
-);*/
     
     BasicDataSource connectorPool = null;
     
@@ -136,5 +126,95 @@ CREATE TABLE reseller (
                 .addFindParam("id", resellerID, 1);
         sm.runDelete();
         return ""+resellerID;
+    }
+    
+    public List<Integer> getStore(int resellerId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("store")
+                .addFindField("id")
+                .addFindField("resellerId")
+                .addFindParam("resellerId", resellerId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    public List<Integer> getShoppingOnlineLink(int resellerId){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("shoppingOnlineLink")
+                .addFindField("id")
+                .addFindField("resellerId")
+                .addFindParam("resellerId", resellerId, 1)
+                .runFind();
+        List<Map<String, Object>> listObject = sm.getResultsFind();
+        List<Integer> listInt = new ArrayList<>(listObject.size());
+        listObject.stream().forEach((obj) -> {
+            listInt.add((Integer)obj.get("id"));
+        });
+        return listInt;
+    }
+    
+    @RequestMapping(value = "/reseller/stores", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findStore(
+            @RequestParam(value="id", required=true) int resellerId
+    ){
+        return this.getStore(resellerId);
+    }
+    
+    @RequestMapping(value = "/reseller/shoppingOnlineLinks", method = RequestMethod.GET)
+    public @ResponseBody List<Integer> findShoppingOnlineLink(
+            @RequestParam(value="id", required=true) int resellerId
+    ){
+        return this.getShoppingOnlineLink(resellerId);
+    }
+    
+    @RequestMapping(value = "/reseller/store", method = RequestMethod.POST)
+    public @ResponseBody String upsertStore(
+           @RequestParam(value="id", required=true) int resellerId,
+           @RequestParam(value="storeId", required=true) int storeId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("store");
+        sm.addId(storeId)
+             .addUpsertParam("resellerId", resellerId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/reseller/shoppingOnlineLink", method = RequestMethod.POST)
+    public @ResponseBody String upsertShoppingOnlineLink(
+           @RequestParam(value="id", required=true) int resellerId,
+           @RequestParam(value="shoppingOnlineLinkId", required=true) int shoppingOnlineLinkId
+    ){
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("shoppingOnlineLink");
+        sm.addId(shoppingOnlineLinkId)
+             .addUpsertParam("resellerId", resellerId);
+        sm.runUpsert();
+        return sm.getId();
+    }
+    
+    @RequestMapping(value = "/reseller/store", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteStore(
+           @RequestParam(value="id", required=true) int resellerId,
+           @RequestParam(value="igotitId", required=true) int storeId
+    ){
+        IgotItService ps = new IgotItService();
+        ps.delete(storeId);
+        return ""+resellerId+":"+storeId;
+    }
+    
+    @RequestMapping(value = "/reseller/shoppingOnlineLink", method = RequestMethod.DELETE)
+    public @ResponseBody String deleteShoppingOnlineLink(
+           @RequestParam(value="id", required=true) int resellerId,
+           @RequestParam(value="shoppingOnlineLinkId", required=true) int shoppingOnlineLinkId
+    ){
+        IgotItService ps = new IgotItService();
+        ps.delete(shoppingOnlineLinkId);
+        return ""+resellerId+":"+shoppingOnlineLinkId;
     }
 }
