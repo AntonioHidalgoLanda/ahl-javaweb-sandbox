@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import product.DatetimeHelper;
 /**
  *
  * @author antonio
@@ -107,6 +108,8 @@ public class EndUserService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int enduserID
     ){
+        this.deleteIgotit(enduserID, -1);
+        
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("enduser")
                 .addFindParam("id", enduserID, 1);
@@ -151,11 +154,19 @@ public class EndUserService {
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
     public @ResponseBody String deleteIgotit(
-           @RequestParam(value="id", required=true) int enduserid,
+           @RequestParam(value="id",  required=false, defaultValue="-1") int enduserid,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        IgotItService ps = new IgotItService();
-        ps.delete(igotitId);
-        return ""+enduserid+":"+igotitId;
+        IgotItService is = new IgotItService();
+        if (igotitId > 0){
+            is.delete(igotitId);
+        }
+        else{
+            List<Map<String, Object>> search = is.find(-1, DatetimeHelper.getNoDate(), enduserid, -1, "", "", -1);
+            search.stream().forEach((item) -> {
+                is.delete((Integer)item.get("id"));
+            }); 
+        }
+        return ""+enduserid+":"+((igotitId>0)?igotitId:"all");
     }
 }

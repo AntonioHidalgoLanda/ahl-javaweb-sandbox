@@ -10,18 +10,19 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import utils.TestUtils;
 
 /**
  *
  * @author antonio
  */
 public class BrandServiceTests {
-    final static int N_RECORDS = 5;
+    final static int N_RECORDS = 3;
     final static String STR_NAME_PREFIX = "brand";
     final static String STR_PAGEURL_PREFIX = "http://page.url";
     final static int N_NO_BRAND_ID = -1;
     
-    private void smokeCreate(BrandService bs, List<Integer> listId ){
+    public void smokeCreate(BrandService bs, List<Integer> listId ){
         List<Map<String, Object>> find;
         for (int i =0; i< BrandServiceTests.N_RECORDS; i++){
             String givenName = BrandServiceTests.STR_NAME_PREFIX+i,
@@ -32,37 +33,30 @@ public class BrandServiceTests {
                             givenPageurl));
             listId.add(id);
             find = bs.find(id, "", "",false);
-            Assert.assertEquals("Check find(id) returns a single record",1, find.size());
-            String fName = find.get(0).get("name").toString();
-            Assert.assertEquals("Check that the returned record has given name",givenName, fName);
-            String fpageurl = find.get(0).get("pageurl").toString();
-            Assert.assertEquals("Check that the returned record has given pageurl",givenPageurl, fpageurl);
+            TestUtils.assertField(find, "name", givenName);
+            TestUtils.assertField(find, "pageurl", givenPageurl);
         }
     }
     
-    private void smokeUpdate(BrandService bs, List<Integer> listId) {
+    public void smokeUpdate(BrandService bs, List<Integer> listId) {
         List<Map<String, Object>> find;
         String strUpdate = "XXXXX";
         int id = listId.get(0);
         bs.upsert(id, strUpdate, "");
         find = bs.find(id, "", "",false);
-        Assert.assertEquals("Check find(id) returns a single record",1, find.size());
-        String fName = find.get(0).get("name").toString();
-        Assert.assertEquals("Check that the returned record has given name",strUpdate, fName);
+        TestUtils.assertField(find, "name", strUpdate);
         id = listId.get(1);
         bs.upsert(id, strUpdate, "");
         find = bs.find(id, "", "",false);
-        Assert.assertEquals("Check find(id) returns a single record",1, find.size());
-        fName = find.get(0).get("name").toString();
-        Assert.assertEquals("Check that the returned record has given name",strUpdate, fName);
+        TestUtils.assertField(find, "name", strUpdate);
         
-        find = bs.find(-1, strUpdate, "",false);
-        Assert.assertTrue("Check find(id) returns a single record",2 <= find.size());
+        find = bs.find(N_NO_BRAND_ID, strUpdate, "",false);
+        TestUtils.assertMultiField(find, "name", 2);
         
     
     }
     
-    private void smokeDelete(BrandService bs, List<Integer> listId){
+    public void smokeDelete(BrandService bs, List<Integer> listId){
         List<Map<String, Object>> find;
         find = bs.find(BrandServiceTests.N_NO_BRAND_ID, "", "",false);
         int currentSize = find.size();
@@ -71,14 +65,13 @@ public class BrandServiceTests {
         });
         find = bs.find(BrandServiceTests.N_NO_BRAND_ID, "", "",false);
         Assert.assertEquals("Check all the records have been deleted",
-                currentSize - BrandServiceTests.N_RECORDS, find.size()); 
+                currentSize - listId.size(), find.size()); 
         
     }
     
     @Test
     public void Crud(){
-        List<Integer> listId = new ArrayList<>(5);
-        List<Map<String, Object>> find;
+        List<Integer> listId = new ArrayList<>(BrandServiceTests.N_RECORDS);
         BrandService bs = new BrandService();
         
         // create
@@ -87,13 +80,8 @@ public class BrandServiceTests {
         // update
         this.smokeUpdate(bs, listId);
         
-        
         // delete
         this.smokeDelete(bs, listId);
-        
-    }
-    
-    public void testProductCrud(){
         
     }
 

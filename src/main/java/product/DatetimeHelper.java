@@ -5,9 +5,9 @@
  */
 package product;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 
 /**
@@ -17,7 +17,7 @@ import java.util.Date;
 public class DatetimeHelper {
     
     private static Date noDate = null;
-    public static final String NO_DATE_STRING = "2000-01-01T00:00:00";
+    public static final String NO_DATE_STRING = "2000-01-01T00:00:00+00:00";
     
     public static Date getNoDate(){
         if (DatetimeHelper.noDate == null){
@@ -27,12 +27,8 @@ public class DatetimeHelper {
     }
     
     private static void generateNoDate(){
-        DateFormat formatter = new SimpleDateFormat("ISO_OFFSET_DATE_TIME");
-        try {
-            DatetimeHelper.noDate = formatter.parse(DatetimeHelper.NO_DATE_STRING);
-        } catch (ParseException ex) {
-            System.err.println(ex);
-        }
+        TemporalAccessor ta = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(NO_DATE_STRING);
+        noDate = Date.from(Instant.from(ta));
     }
     
     public static boolean isNoDate(Date date){
