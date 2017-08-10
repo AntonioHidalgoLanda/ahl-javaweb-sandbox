@@ -40,11 +40,11 @@ public class IgotItService {
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
-           @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
-           @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
+           @RequestParam(value="enduserid", required=false, defaultValue="-1") int enduserid,
+           @RequestParam(value="visibility", required=false, defaultValue="-1") int visibility,
            @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
-           @RequestParam(value="rating", required=false, defaultValue="10") int rating,
+           @RequestParam(value="rating", required=false, defaultValue="-1") int rating,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
@@ -76,20 +76,14 @@ public class IgotItService {
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
-        System.out.println("RESULTS FOUND: "+result.size());
-        System.out.println("SQL QUERY: "+sm.getLastQuery());
-        result.stream().forEach((obj) -> {
-            // publishdate is of the class sql.Timestamp
-            String strPublishdate = obj.get("publishdate").toString();
-            obj.remove("publishdate");
-            obj.put("publishdate",strPublishdate);
-            if(bextended){
+        if(bextended){
+            result.stream().forEach((obj) -> {
                 int id = (Integer)obj.get("id");
                 obj.put("photoList", this.findPhotos(id));
                 obj.put("productList", this.findProducts(id));
                 obj.put("tagList", this.findTags(id));
-            }
-        });
+            });
+        }
         return result;
     }
     
