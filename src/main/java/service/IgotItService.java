@@ -77,7 +77,7 @@ public class IgotItService {
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
         if(bextended){
-            result.stream().forEach((obj) -> {
+        result.stream().forEach((obj) -> {
                 int id = (Integer)obj.get("id");
                 obj.put("photoList", this.findPhotos(id));
                 obj.put("productList", this.findProducts(id));
