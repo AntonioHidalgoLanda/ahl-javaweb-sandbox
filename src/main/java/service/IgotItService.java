@@ -76,9 +76,12 @@ public class IgotItService {
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
+        System.out.println("RESULTS FOUND: "+result.size());
         result.stream().forEach((obj) -> {
             // publishdate is of the class sql.Timestamp
-            obj.put("publishdate",obj.get("publishdate").toString());
+            String strPublishdate = obj.get("publishdate").toString();
+            obj.remove("publishdate");
+            obj.put("publishdate",strPublishdate);
             if(bextended){
                 int id = (Integer)obj.get("id");
                 obj.put("photoList", this.findPhotos(id));
