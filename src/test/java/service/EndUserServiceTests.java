@@ -50,12 +50,7 @@ public class EndUserServiceTests {
         TestUtils.assertField(find, "recoveryEmail", strUpdate);
         TestUtils.assertField(find, "federationId", strUpdate);
         id = listId.get(1);
-       // try {
-            eus.upsert(id, strUpdate, "", "", "");
-        /*}
-        catch (PSQLException ex){
-            
-        }*/
+        eus.upsert(id, strUpdate, "", "", "");
         eus.upsert(id, "", "", strUpdate, "");
         find = eus.find(id, "", "","", "");
         TestUtils.assertField(find, "recoveryEmail", strUpdate);

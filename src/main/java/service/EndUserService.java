@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import product.DatetimeHelper;
 /**
  *
  * @author antonio
@@ -162,7 +161,7 @@ public class EndUserService {
             is.delete(igotitId);
         }
         else{
-            List<Map<String, Object>> search = is.find(-1, DatetimeHelper.getNoDate(), enduserid, -1, "", "", -1);
+            List<Map<String, Object>> search = is.find(-1, enduserid, -1, "", "", -1,false);
             search.stream().forEach((item) -> {
                 is.delete((Integer)item.get("id"));
             }); 

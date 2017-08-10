@@ -19,14 +19,12 @@ public interface SqlMediator {
     public SqlMediator addUpsertParam(String fieldname,String value);
     public SqlMediator addUpsertParam(String fieldname,double value);
     public SqlMediator addUpsertParam(String fieldname,int value);
-    public SqlMediator addUpsertParam(String fieldname,Date value);
     public SqlMediator addId(String id);
     public SqlMediator addId(int id);
     public SqlMediator addFindField(String fieldname);
     public SqlMediator addFindParam(String fieldname, String value,double weight);
     public SqlMediator addFindParam(String fieldname, double value,double weight);
     public SqlMediator addFindParam(String fieldname, int value,double weight);
-    public SqlMediator addFindParam(String fieldname, Date value,double weight);
     public String getId();
     /**
      * this.addUpsertParam()

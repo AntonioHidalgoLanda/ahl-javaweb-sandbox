@@ -12,16 +12,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Date;
 import org.apache.commons.dbcp2.BasicDataSource;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import product.DatetimeHelper;
 
 /**
  *
@@ -43,12 +40,12 @@ public class IgotItService {
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
-           @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
            @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
            @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
            @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
-           @RequestParam(value="rating", required=false, defaultValue="10") int rating
+           @RequestParam(value="rating", required=false, defaultValue="10") int rating,
+           @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
@@ -61,9 +58,6 @@ public class IgotItService {
                 .addFindField("rating");
         if (igotitId >= 0){
             sm.addFindParam("id", igotitId, 1);
-        }
-        if (!DatetimeHelper.isNoDate(publishdate)){
-            sm.addFindParam("publishdate", publishdate, 1);
         }
         if (enduserid > 0){
             sm.addFindParam("enduserid", enduserid, 1);
@@ -84,9 +78,11 @@ public class IgotItService {
         List<Map<String, Object>> result = sm.getResultsFind();
         result.stream().forEach((obj) -> {
             int id = (Integer)obj.get("id");
-            obj.put("photoList", this.findPhotos(id));
-            obj.put("productList", this.findProducts(id));
-            obj.put("tagList", this.findTags(id));
+            if(bextended){
+                obj.put("photoList", this.findPhotos(id));
+                obj.put("productList", this.findProducts(id));
+                obj.put("tagList", this.findTags(id));
+            }
         });
         return result;
     }
@@ -97,7 +93,6 @@ public class IgotItService {
     @RequestMapping(value = "/igotit", method = RequestMethod.POST)
     public @ResponseBody String upsert(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
-            @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
             @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
             @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
             @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
@@ -108,9 +103,6 @@ public class IgotItService {
         sm.setTable("igotit");
         if (igotitId >= 0){
             sm.addId(igotitId);
-        }
-        if (!DatetimeHelper.isNoDate(publishdate)){
-            sm.addUpsertParam("publishdate",publishdate );
         }
         if (enduserid > 0){
             sm.addUpsertParam("enduserid", enduserid);
