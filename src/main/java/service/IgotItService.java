@@ -77,6 +77,7 @@ public class IgotItService {
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
         System.out.println("RESULTS FOUND: "+result.size());
+        System.out.println("SQL QUERY: "+sm.getLastQuery());
         result.stream().forEach((obj) -> {
             // publishdate is of the class sql.Timestamp
             String strPublishdate = obj.get("publishdate").toString();
