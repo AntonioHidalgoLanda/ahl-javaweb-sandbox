@@ -67,8 +67,6 @@ public class IgotItServiceTests {
         int currentSize = find.size();
         listId.stream().forEach((id) -> {
             is.delete(id);
-            // TODO, we need to remove linked elements to igotit (Photo, Tags, Product Association)
-            
         });
         find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, "", "", -1, false);
         Assert.assertEquals("Check all the records have been deleted",
