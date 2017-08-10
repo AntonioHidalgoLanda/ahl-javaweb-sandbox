@@ -153,8 +153,8 @@ public class EndUserService {
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
     public @ResponseBody String deleteIgotit(
-           @RequestParam(value="id",  required=false, defaultValue="-1") int enduserid,
-           @RequestParam(value="igotitId", required=true) int igotitId
+           @RequestParam(value="id",  required=true) int enduserid,
+           @RequestParam(value="igotitId", required=false, defaultValue="-1") int igotitId
     ){
         IgotItService is = new IgotItService();
         if (igotitId > 0){

@@ -128,6 +128,10 @@ public class IgotItService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int igotitId
     ){
+        this.deletePhoto(igotitId, -1);
+        this.deleteProduct(igotitId, -1);
+        this.deleteTag(igotitId, "");
+        
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
                 .addFindParam("id", igotitId, 1);
@@ -243,33 +247,50 @@ public class IgotItService {
     @RequestMapping(value = "/igotit/photo", method = RequestMethod.DELETE)
     public @ResponseBody String deletePhoto(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="photoId", required=true) int photoId
+           @RequestParam(value="photoId", required=false, defaultValue="-1") int photoId
     ){
         PhotoService ps = new PhotoService();
-        ps.delete(photoId);
-        return ""+igotitId+":"+photoId;
+        if (photoId > 0){
+            ps.delete(photoId);
+        }
+        else {
+            List<Map<String, Object>> search = ps.find(-1, "", igotitId);
+            search.stream().forEach((item) -> {
+                ps.delete((Integer)item.get("id"));
+            }); 
+        }
+        return ""+igotitId+":"+((photoId>0)?photoId:"all");
     }
     
     @RequestMapping(value = "/igotit/product", method = RequestMethod.DELETE)
     public @ResponseBody String deleteProduct(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="productId", required=true) int productId
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct")
-                .addFindParam("igotitId", igotitId, 1)
-                .addFindParam("productId", productId, 1);
+        sm.setTable("igotitProduct").addFindParam("igotitId", igotitId, 1);
+        if (productId>0){
+            sm.setTable("igotitProduct").addFindParam("productId", productId, 1);
+        }
         sm.runDelete();
-        return ""+igotitId+":"+productId;
+        return ""+igotitId+":"+((productId>0)?productId:"all");
     }
     
     @RequestMapping(value = "/igotit/tag", method = RequestMethod.DELETE)
     public @ResponseBody String deleteTag(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="tag", required=true) String tag
+           @RequestParam(value="tag", required=false, defaultValue="") String tag
     ){
         TagService ts = new TagService();
-        ts.delete(tag,igotitId);
-        return ""+igotitId+":"+tag;
+        if (!tag.isEmpty()){
+            ts.delete(tag,igotitId);
+        }
+        else {
+            List<Map<String, Object>> search = ts.find("", igotitId);
+            search.stream().forEach((item) -> {
+                ts.delete(item.get("id").toString(),igotitId);
+            }); 
+        }
+        return ""+igotitId+":"+((!tag.isEmpty())?tag:"all");
     }
 }
