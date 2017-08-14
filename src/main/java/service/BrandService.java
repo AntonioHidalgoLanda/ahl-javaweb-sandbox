@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,12 +43,15 @@ public class BrandService {
      * @param brandID
      * @param name
      * @param pageurl
+     * @param bextended if true (default) will also return the products which 
+     * is an expensive operation in a generic search
      * @return s*/
     @RequestMapping(value = "/brands", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int brandID,
            @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
+           @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl,
+           @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("brand")
@@ -65,9 +69,11 @@ public class BrandService {
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
-        result.stream().forEach((obj) -> {
-            obj.put("productList", this.findProducts((Integer)obj.get("id")));
-        });
+        if(bextended){
+            result.stream().forEach((obj) -> {
+                obj.put("productList", this.findProducts((Integer)obj.get("id")));
+            });
+        }
         return result;
     }
     

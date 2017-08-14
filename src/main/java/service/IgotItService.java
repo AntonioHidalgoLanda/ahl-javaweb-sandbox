@@ -12,16 +12,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Date;
 import org.apache.commons.dbcp2.BasicDataSource;
 
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import product.DatetimeHelper;
 
 /**
  *
@@ -43,12 +40,12 @@ public class IgotItService {
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
-           @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
-           @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
-           @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
+           @RequestParam(value="enduserid", required=false, defaultValue="-1") int enduserid,
+           @RequestParam(value="visibility", required=false, defaultValue="-1") int visibility,
            @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
-           @RequestParam(value="rating", required=false, defaultValue="10") int rating
+           @RequestParam(value="rating", required=false, defaultValue="-1") int rating,
+           @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
@@ -61,9 +58,6 @@ public class IgotItService {
                 .addFindField("rating");
         if (igotitId >= 0){
             sm.addFindParam("id", igotitId, 1);
-        }
-        if (!DatetimeHelper.isNoDate(publishdate)){
-            sm.addFindParam("publishdate", publishdate, 1);
         }
         if (enduserid > 0){
             sm.addFindParam("enduserid", enduserid, 1);
@@ -82,12 +76,14 @@ public class IgotItService {
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
+        if(bextended){
         result.stream().forEach((obj) -> {
-            int id = (Integer)obj.get("id");
-            obj.put("photoList", this.findPhotos(id));
-            obj.put("productList", this.findProducts(id));
-            obj.put("tagList", this.findTags(id));
-        });
+                int id = (Integer)obj.get("id");
+                obj.put("photoList", this.findPhotos(id));
+                obj.put("productList", this.findProducts(id));
+                obj.put("tagList", this.findTags(id));
+            });
+        }
         return result;
     }
     
@@ -97,7 +93,6 @@ public class IgotItService {
     @RequestMapping(value = "/igotit", method = RequestMethod.POST)
     public @ResponseBody String upsert(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
-            @RequestParam(value="publishdate", required=false, defaultValue=DatetimeHelper.NO_DATE_STRING) @DateTimeFormat(pattern="ISO_OFFSET_DATE_TIME") Date publishdate,
             @RequestParam(value="enduserid", required=false, defaultValue="0") int enduserid,
             @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
             @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
@@ -108,9 +103,6 @@ public class IgotItService {
         sm.setTable("igotit");
         if (igotitId >= 0){
             sm.addId(igotitId);
-        }
-        if (!DatetimeHelper.isNoDate(publishdate)){
-            sm.addUpsertParam("publishdate",publishdate );
         }
         if (enduserid > 0){
             sm.addUpsertParam("enduserid", enduserid);
@@ -136,6 +128,10 @@ public class IgotItService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int igotitId
     ){
+        this.deletePhoto(igotitId, -1);
+        this.deleteProduct(igotitId, -1);
+        this.deleteTag(igotitId, "");
+        
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit")
                 .addFindParam("id", igotitId, 1);
@@ -251,33 +247,50 @@ public class IgotItService {
     @RequestMapping(value = "/igotit/photo", method = RequestMethod.DELETE)
     public @ResponseBody String deletePhoto(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="photoId", required=true) int photoId
+           @RequestParam(value="photoId", required=false, defaultValue="-1") int photoId
     ){
         PhotoService ps = new PhotoService();
-        ps.delete(photoId);
-        return ""+igotitId+":"+photoId;
+        if (photoId > 0){
+            ps.delete(photoId);
+        }
+        else {
+            List<Map<String, Object>> search = ps.find(-1, "", igotitId);
+            search.stream().forEach((item) -> {
+                ps.delete((Integer)item.get("id"));
+            }); 
+        }
+        return ""+igotitId+":"+((photoId>0)?photoId:"all");
     }
     
     @RequestMapping(value = "/igotit/product", method = RequestMethod.DELETE)
     public @ResponseBody String deleteProduct(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="productId", required=true) int productId
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct")
-                .addFindParam("igotitId", igotitId, 1)
-                .addFindParam("productId", productId, 1);
+        sm.setTable("igotitProduct").addFindParam("igotitId", igotitId, 1);
+        if (productId>0){
+            sm.setTable("igotitProduct").addFindParam("productId", productId, 1);
+        }
         sm.runDelete();
-        return ""+igotitId+":"+productId;
+        return ""+igotitId+":"+((productId>0)?productId:"all");
     }
     
     @RequestMapping(value = "/igotit/tag", method = RequestMethod.DELETE)
     public @ResponseBody String deleteTag(
            @RequestParam(value="id", required=true) int igotitId,
-           @RequestParam(value="tag", required=true) String tag
+           @RequestParam(value="tag", required=false, defaultValue="") String tag
     ){
         TagService ts = new TagService();
-        ts.delete(tag,igotitId);
-        return ""+igotitId+":"+tag;
+        if (!tag.isEmpty()){
+            ts.delete(tag,igotitId);
+        }
+        else {
+            List<Map<String, Object>> search = ts.find("", igotitId);
+            search.stream().forEach((item) -> {
+                ts.delete(item.get("id").toString(),igotitId);
+            }); 
+        }
+        return ""+igotitId+":"+((!tag.isEmpty())?tag:"all");
     }
 }

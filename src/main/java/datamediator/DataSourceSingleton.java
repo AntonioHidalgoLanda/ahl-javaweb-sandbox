@@ -8,7 +8,6 @@ package datamediator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 /**
@@ -31,7 +30,7 @@ public class DataSourceSingleton {
     private static void dataSource() throws SQLException, URISyntaxException {
         URI dbUri = new URI(System.getenv("DATABASE_URL"));
         String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ":"
-                + dbUri.getPort() + dbUri.getPath();
+                + dbUri.getPort() + dbUri.getPath()+"?sslmode=require";
         DataSourceSingleton.connectionPool = new BasicDataSource();
 
         if (dbUri.getUserInfo() != null) {

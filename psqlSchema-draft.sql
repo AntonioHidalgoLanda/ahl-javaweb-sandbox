@@ -8,7 +8,7 @@ CREATE TABLE enduser (
 
 CREATE TABLE igotit (
   id   SERIAL PRIMARY KEY,
-  publishdate timestamp not null default CURRENT_DATE,
+  publishdate timestamp not null default (now() at time zone 'utc'),
   enduserid int4 not null references enduser(id),
   visibility smallint not null default 0, -- 0 public; 1 private
   usercomment varchar (1024) not null default '', 
