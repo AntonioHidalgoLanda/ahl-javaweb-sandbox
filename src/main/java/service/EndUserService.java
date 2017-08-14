@@ -107,6 +107,8 @@ public class EndUserService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int enduserID
     ){
+        this.deleteIgotit(enduserID, -1);
+        
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("enduser")
                 .addFindParam("id", enduserID, 1);
@@ -151,11 +153,19 @@ public class EndUserService {
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
     public @ResponseBody String deleteIgotit(
-           @RequestParam(value="id", required=true) int enduserid,
-           @RequestParam(value="igotitId", required=true) int igotitId
+           @RequestParam(value="id",  required=true) int enduserid,
+           @RequestParam(value="igotitId", required=false, defaultValue="-1") int igotitId
     ){
-        IgotItService ps = new IgotItService();
-        ps.delete(igotitId);
-        return ""+enduserid+":"+igotitId;
+        IgotItService is = new IgotItService();
+        if (igotitId > 0){
+            is.delete(igotitId);
+        }
+        else{
+            List<Map<String, Object>> search = is.find(-1, enduserid, -1, "", "", -1,false);
+            search.stream().forEach((item) -> {
+                is.delete((Integer)item.get("id"));
+            }); 
+        }
+        return ""+enduserid+":"+((igotitId>0)?igotitId:"all");
     }
 }

@@ -44,7 +44,8 @@ public class ProductService {
            @RequestParam(value="brandid", required=false, defaultValue="0") int brandid,
            @RequestParam(value="brandedIgotitId", required=false, defaultValue="0") int brandedIgotitId,
            @RequestParam(value="name", required=false, defaultValue="") String name,
-           @RequestParam(value="brandLink", required=false, defaultValue="") String brandLink
+           @RequestParam(value="brandLink", required=false, defaultValue="") String brandLink,
+           @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("product")
@@ -76,9 +77,11 @@ public class ProductService {
         List<Map<String, Object>> result = sm.getResultsFind();
         result.stream().forEach((obj) -> {
             int id = (Integer)obj.get("id");
-            obj.put("shoppingOnlineLinkList", this.findShoppingOnlineLink(id));
-            obj.put("storeList", this.findStore(id));
-            obj.put("igotitList", this.findIgotit(id));
+            if(bextended){
+                obj.put("shoppingOnlineLinkList", this.findShoppingOnlineLink(id));
+                obj.put("storeList", this.findStore(id));
+                obj.put("igotitList", this.findIgotit(id));
+            }
         });
         return result;
     }

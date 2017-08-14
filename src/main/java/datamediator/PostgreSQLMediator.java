@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,7 +24,6 @@ public class PostgreSQLMediator implements SqlMediator{
     private final Map<String,String> mapStringParam = new HashMap<>();
     private final Map<String,Integer> mapIntParam = new HashMap<>();
     private final Map<String,Double> mapDoubleParam = new HashMap<>();
-    private final Map<String,Date> mapDateParam = new HashMap<>();
     private final Map<String,Double> mapWeight = new HashMap<>();
     private final List<Map<String, Object>> listFindResult = new LinkedList<>();
     private final List<String> listFindFields = new LinkedList<>();
@@ -56,7 +54,6 @@ public class PostgreSQLMediator implements SqlMediator{
         this.mapStringParam.clear();
         this.mapIntParam.clear();
         this.mapDoubleParam.clear();
-        this.mapDateParam.clear();
         this.listFindFields.clear();
         this.mapWeight.clear();
         this.listFindResult.clear();     // We assume that the collector will take care of the inner Maps
@@ -66,8 +63,7 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator addUpsertParam(String fieldname, String value) {
         if (this.mapIntParam.containsKey(fieldname)
-                || this.mapDoubleParam.containsKey(fieldname)
-                || this.mapDateParam.containsKey(fieldname)){
+                || this.mapDoubleParam.containsKey(fieldname)){
             return this;
         }
         if (fieldname.equalsIgnoreCase("id")){
@@ -80,8 +76,7 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator addUpsertParam(String fieldname, double value) {
         if (this.mapStringParam.containsKey(fieldname)
-                || this.mapIntParam.containsKey(fieldname)
-                || this.mapDateParam.containsKey(fieldname)){
+                || this.mapIntParam.containsKey(fieldname)){
             return this;
         }
         this.mapDoubleParam.put(fieldname, value);
@@ -91,25 +86,13 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator addUpsertParam(String fieldname, int value) {
         if (this.mapStringParam.containsKey(fieldname)
-                || this.mapDoubleParam.containsKey(fieldname)
-                || this.mapDateParam.containsKey(fieldname)){
+                || this.mapDoubleParam.containsKey(fieldname)){
             return this;
         }
         if (fieldname.equalsIgnoreCase("id")){
             this.nId = value;
         }
         this.mapIntParam.put(fieldname, value);
-        return this;
-    }
-
-    @Override
-    public SqlMediator addUpsertParam(String fieldname, Date value) {
-        if (this.mapStringParam.containsKey(fieldname)
-                || this.mapIntParam.containsKey(fieldname)
-                || this.mapDoubleParam.containsKey(fieldname)){
-            return this;
-        }
-        this.mapDateParam.put(fieldname, value);
         return this;
     }
 
@@ -142,13 +125,6 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator addFindParam(String fieldname, int value, double weight) {
         this.mapIntParam.put(fieldname, value);
-        this.mapWeight.put(fieldname,weight);
-        return this;
-    }
-
-    @Override
-    public SqlMediator addFindParam(String fieldname, Date value, double weight) {
-        this.mapDateParam.put(fieldname, value);
         this.mapWeight.put(fieldname,weight);
         return this;
     }
@@ -220,9 +196,6 @@ public class PostgreSQLMediator implements SqlMediator{
         else if (this.mapDoubleParam.containsKey(fieldname)){
             updateSql.setDouble(idx,this.mapDoubleParam.get(fieldname));
         }
-        else if (this.mapDateParam.containsKey(fieldname)){
-            updateSql.setDate(idx, (java.sql.Date) this.mapDateParam.get(fieldname));
-        }
         
         return updateSql;
     }
@@ -230,13 +203,11 @@ public class PostgreSQLMediator implements SqlMediator{
     private ArrayList<String> generateListParams(){
         int nParams = this.mapStringParam.keySet().size() +
                     this.mapIntParam.keySet().size() +
-                    this.mapDoubleParam.keySet().size() +
-                    this.mapDateParam.keySet().size();
+                    this.mapDoubleParam.keySet().size();
         ArrayList<String> listParams = new ArrayList<>(nParams);
         listParams.addAll(this.mapStringParam.keySet());
         listParams.addAll(this.mapIntParam.keySet());
         listParams.addAll(this.mapDoubleParam.keySet());
-        listParams.addAll(this.mapDateParam.keySet());
         return listParams;
     }
 
@@ -246,7 +217,7 @@ public class PostgreSQLMediator implements SqlMediator{
             String strListValues = this.listToCsvString(listParams);
             this.lastQuery = "INSERT INTO " + this.tablename + " ";
             if (!this.mapStringParam.isEmpty() || !this.mapIntParam.isEmpty() ||
-                    !this.mapDoubleParam.isEmpty() || !this.mapDateParam.isEmpty()){
+                    !this.mapDoubleParam.isEmpty()){
                 String statementFields = " (";
                 String statementValues = ") VALUES (";
                 String statementClosing = ") Returning id;";
@@ -267,7 +238,6 @@ public class PostgreSQLMediator implements SqlMediator{
 
                 } catch (Exception e) {
                     System.err.println(e);
-                    //return e.getMessage();
                 }
             }
             this.nId = nNewId;
@@ -364,7 +334,11 @@ public class PostgreSQLMediator implements SqlMediator{
           while (rs.next()) {
             Map<String, Object> result = new HashMap<>();
             for (String fieldname : this.listFindFields){
-                result.put(fieldname, rs.getObject(fieldname));
+                Object field = rs.getObject(fieldname);
+                if (field instanceof java.sql.Timestamp){
+                    field = field.toString();
+                }
+                result.put(fieldname, field);
             }
             this.listFindResult.add(result);
           }
