@@ -14,19 +14,16 @@ public class CountryHelper {
         if (country.length() == 3){
             return country.toUpperCase();
         }
-        switch (country){
-            case "England":
-            case "Great Britain":
+        switch (country.toUpperCase()){
+            case "ENGLAND":
+            case "GREAT BRITAIN":
             case "GB":
             case "UK":
             case "U.K.":
-            case "United Kingdom":
-            case "uk":
+            case "UNITED KINGDOM":
                 return "GBR";
-            case "Spain":
-            case "España":
-            case "spain":
-            case "españa":
+            case "SPAIN":
+            case "ESPAÑA":
                 return "ESP";
             default:
                 return "";

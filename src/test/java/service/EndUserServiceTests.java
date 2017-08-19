@@ -32,7 +32,7 @@ public class EndUserServiceTests {
             String givenAvatarUrl = EndUserServiceTests.STR_AVATAR_URL_PREFIX+i;
             int id = Integer.parseInt(eus.upsert(N_NO_ID, givenFederationId, givenProfileName, givenRecoveryEmail, givenAvatarUrl));
             listId.add(id);
-            find = eus.find(id, "", "","", "");
+            find = eus.find(id, "", "","", "",false);
             TestUtils.assertField(find, "federationId", givenFederationId);
             TestUtils.assertField(find, "profileName", givenProfileName);
             TestUtils.assertField(find, "recoveryEmail", givenRecoveryEmail);
@@ -46,20 +46,20 @@ public class EndUserServiceTests {
         int id = listId.get(0);
         eus.upsert(id, "", "", strUpdate, "");
         eus.upsert(id, strUpdate, "", "", "");
-        find = eus.find(id, "", "","", "");
+        find = eus.find(id, "", "","", "",false);
         TestUtils.assertField(find, "recoveryEmail", strUpdate);
         TestUtils.assertField(find, "federationId", strUpdate);
         id = listId.get(1);
         eus.upsert(id, strUpdate, "", "", "");
         eus.upsert(id, "", "", strUpdate, "");
-        find = eus.find(id, "", "","", "");
+        find = eus.find(id, "", "","", "",false);
         TestUtils.assertField(find, "recoveryEmail", strUpdate);
         TestUtils.assertNotField(find, "federationId", strUpdate);
         
-        find = eus.find(N_NO_ID, "","", strUpdate,"");
+        find = eus.find(N_NO_ID, "","", strUpdate,"",false);
         TestUtils.assertMultiField(find, "recoveryEmail", 2);
         
-        find = eus.find(N_NO_ID, strUpdate, "","","");
+        find = eus.find(N_NO_ID, strUpdate, "","","",false);
         TestUtils.assertUniqueField(find, "recoveryEmail");
         
     
@@ -67,12 +67,12 @@ public class EndUserServiceTests {
     
     public void smokeDelete(EndUserService eus, List<Integer> listId){
         List<Map<String, Object>> find;
-        find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","");
+        find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);
         int currentSize = find.size();
         listId.stream().forEach((id) -> {
             eus.delete(id);
         });
-        find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","");
+        find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);
         Assert.assertEquals("Check all the records have been deleted",
                 currentSize - listId.size(), find.size()); 
         
