@@ -13,9 +13,8 @@ CREATE TABLE igotit (
   visibility smallint not null default 0, -- 0 public; 1 private
   usercomment varchar (1024) not null default '', 
   coordinates varchar (255),
-  rating smallint
--- access level: 0 (public), 1 (followers), 2 (friends), 3 (draft/me) -- int4
--- ,accessLevel int4 not null default 0
+  rating smallint,
+  accessLevel int4 not null default 0 -- 0 (draft/me), 1 (friends), 2 (followers), 3 (public)
 );
 
 CREATE TABLE brand (
@@ -53,7 +52,7 @@ CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   sku varchar (255) not null,
   brandid  int4 not null references brand (id),
-  brandedIgotitId int4 not null references igotit(id), -- reference post from the brand (has priority)
+  brandedIgotitId int4 references igotit(id), -- reference post from the brand (has priority)
   name varchar (255) not null,
   brandLink varchar (255) -- see the product in brand page
 );
@@ -68,12 +67,12 @@ CREATE TABLE shoppingOnlineLink (
 CREATE TABLE store (
   id SERIAL PRIMARY KEY,
   resellerId int4 not null references reseller(id),
-  numberStreet varchar (255),
+  numberStreet varchar (255) not null,
   address1 varchar (255),
   address2 varchar (255),
   city varchar (255),
   stateProvince varchar (255),
-  country varchar (255),
+  country varchar (255) not null,
   postCode varchar (255) not null,
   contactEmail varchar (255),
   contactPhone varchar (255),
@@ -90,10 +89,8 @@ CREATE TABLE igotitProduct (
   productId int4 not null references product(id)
 );
 
-/*
 CREATE TABLE friend (
   enduserid int4 not null references enduser(id),
-  enduserid int4 not null references enduser(id),
-  relationship smallint     -- 0 (follower), 1 (friend)
+  friendid int4 not null references enduser(id),
+  relationship smallint not null default 1    -- 0 (follower), 1 (friend)
 );
-*/
