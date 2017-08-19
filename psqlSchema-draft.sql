@@ -14,6 +14,8 @@ CREATE TABLE igotit (
   usercomment varchar (1024) not null default '', 
   coordinates varchar (255),
   rating smallint
+-- access level: 0 (public), 1 (followers), 2 (friends), 3 (draft/me) -- int4
+-- ,accessLevel int4 not null default 0
 );
 
 CREATE TABLE brand (
@@ -87,3 +89,11 @@ CREATE TABLE igotitProduct (
   igotitId int4 not null references igotit (id),
   productId int4 not null references product(id)
 );
+
+/*
+CREATE TABLE friend (
+  enduserid int4 not null references enduser(id),
+  enduserid int4 not null references enduser(id),
+  relationship smallint     -- 0 (follower), 1 (friend)
+);
+*/
