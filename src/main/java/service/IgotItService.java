@@ -37,6 +37,18 @@ public class IgotItService {
         }
     }
     
+    public List<Map<String, Object>> find(int igotitId){
+        return this.find(igotitId, -1, -1, "", "", -1, -1, true);
+    }
+    
+    public List<Map<String, Object>> find(int igotitId, boolean bextended){
+        return this.find(igotitId, -1, -1, "", "", -1, -1, bextended);
+    }
+    
+    public List<Map<String, Object>> findEndusers(int enduserid, boolean bextended){
+        return this.find(-1, enduserid, -1, "", "", -1, -1, bextended);
+    }
+    
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int igotitId,
@@ -45,6 +57,7 @@ public class IgotItService {
            @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
            @RequestParam(value="rating", required=false, defaultValue="-1") int rating,
+           @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
@@ -55,6 +68,7 @@ public class IgotItService {
                 .addFindField("visibility")
                 .addFindField("usercomment")
                 .addFindField("coordinates")
+                .addFindField("accessLevel")
                 .addFindField("rating");
         if (igotitId >= 0){
             sm.addFindParam("id", igotitId, 1);
@@ -73,6 +87,9 @@ public class IgotItService {
         }
         if (rating > 0){
             sm.addFindParam("rating", rating, 1);
+        }
+        if (accessLevel > 0){
+            sm.addFindParam("accessLevel", accessLevel, 1);
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
@@ -97,7 +114,8 @@ public class IgotItService {
             @RequestParam(value="visibility", required=false, defaultValue="0") int visibility,
             @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
             @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
-            @RequestParam(value="rating", required=false, defaultValue="0") int rating
+            @RequestParam(value="rating", required=false, defaultValue="0") int rating,
+           @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotit");
@@ -118,6 +136,9 @@ public class IgotItService {
         }
         if (rating > 0){
             sm.addUpsertParam("rating", rating);
+        }
+        if (rating > 0){
+            sm.addUpsertParam("accessLevel", accessLevel);
         }
         sm.runUpsert();
         return sm.getId();
