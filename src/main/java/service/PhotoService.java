@@ -7,18 +7,31 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  *
@@ -29,6 +42,8 @@ public class PhotoService {
     
     BasicDataSource connectorPool = null;
     
+    private final String UPLOADED_FOLDER = "photos/"; // = "F://temp//";
+    
     PhotoService(){
         try {
             this.connectorPool = DataSourceSingleton.getConnectionPool();
@@ -36,7 +51,66 @@ public class PhotoService {
             System.err.println(ex);
         }
     }
+    
+    
+    @RequestMapping(path = "/download", method = RequestMethod.GET)
+    public ResponseEntity<Resource> download(String param) throws IOException {
+        File file = new File(UPLOADED_FOLDER+"coat-of-arms.png");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
 
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream"))
+                .body(resource);
+    
+    }
+    
+    @RequestMapping(value = "/uploadFile", method = RequestMethod.POST)
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile uploadfile,
+           @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
+            ) {
+        if (uploadfile.isEmpty()) {
+            return new ResponseEntity("please select a file!", HttpStatus.OK);
+        }
+
+        try {
+            saveUploadedFiles(Arrays.asList(uploadfile));
+
+        } catch (IOException e) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity("Successfully uploaded - " +
+                uploadfile.getOriginalFilename(), new HttpHeaders(), HttpStatus.OK);
+    }
+    
+    // TODO: This requires Refactoring into a File Mediator
+    // fields: UPLOADED_FOLDER
+    // method, return localpaths
+    private void saveUploadedFiles(List<MultipartFile> files) throws IOException {
+
+        for (MultipartFile file : files) {
+
+            if (file.isEmpty()) {
+                continue;
+            }
+
+            byte[] bytes = file.getBytes();
+            Path path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename());
+            Files.write(path, bytes);
+        }
+
+    }
+    
+    @RequestMapping(value = "/uploadStatus", method = RequestMethod.GET)
+    public String uploadStatus() {
+        return "uploadStatus";
+    }
     
     @RequestMapping(value = "/photos", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
