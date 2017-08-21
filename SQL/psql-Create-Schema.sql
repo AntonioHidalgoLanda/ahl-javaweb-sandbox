@@ -2,7 +2,7 @@ CREATE TABLE enduser (
   id   SERIAL PRIMARY KEY,
   federationId varchar (255) NOT NULL UNIQUE,
   profileName varchar (255) NOT NULL,
-  recoveryEmail varchar (255) NOT NULL,
+  recoveryEmail varchar (255),
   avatarUrl varchar(255)
 );
 

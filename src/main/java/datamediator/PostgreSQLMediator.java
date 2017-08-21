@@ -297,21 +297,29 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator runFind(double threshold) {
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
-        this.lastQuery = "SELECT "
+        this.lastQuery = "SELECT DISTINCT "
                 + this.listToCsvString(this.listFindFields)
                 + " FROM " + this.tablename;
-        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
+    //    this.lastQuery += this.accessibilityFindJoin();
+        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty() /*|| this.accesibilityFindContainsWhere()*/){
             this.lastQuery += " WHERE ";
-        }
-        if (!listParams.isEmpty()){
-            this.lastQuery += this.listOfPairs(listParams, "AND");
-        }
-        if (this.nId > -1 || !this.strId.isEmpty()){
             if (!listParams.isEmpty()){
-                this.lastQuery += " AND ";
+                this.lastQuery += this.listOfPairs(listParams, "AND");
             }
-            this.lastQuery += " id = ? ";
-        } 
+            if (this.nId > -1 || !this.strId.isEmpty()){
+                if (!listParams.isEmpty()){
+                    this.lastQuery += " AND ";
+                }
+                this.lastQuery += " id = ? ";
+            }
+            /*
+            if (this.accesibilityFindContainsWhere()){
+                if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
+                    this.lastQuery += " AND ";
+                }
+                this.lastQuery += this.accessibilityFindWhere();
+            }*/
+        }
 
         try (Connection connection = this.connectionPool.getConnection()){
             PreparedStatement stmt = connection.prepareStatement(this.lastQuery);
@@ -385,4 +393,60 @@ public class PostgreSQLMediator implements SqlMediator{
         return new ArrayList<>(listFindResult);
     }
 
+    private boolean accesibilityFindContainsWhere() {
+        switch (this.tablename.toLowerCase()){
+            case "igotit":
+            case "photo":
+            case "tag":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private String accessibilityFindJoin() {
+        String strJoin = "";
+        switch (this.tablename.toLowerCase()){
+            case "igotit":
+                strJoin = " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                break;
+            case "photo":
+                strJoin = " INNER JOIN igotit ON igotit.igotitId = photo.igotitId";
+                strJoin += " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                break;
+            case "tag":
+                strJoin = " INNER JOIN igotit ON igotit.igotitId = tag.igotitId";
+                strJoin += " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                break;
+        }
+        return strJoin;
+    }
+    
+    private String accessibilityFindWhere() {
+        String strWhere = "";
+        int currentuserid = -1;
+        System.err.println("ERROR: currentuserid is not defined;");
+        switch (this.tablename.toLowerCase()){
+            case "igotit":
+            case "photo":
+            case "tag":
+                strWhere = "( "
+                  +         " igotit.enduserid = "+currentuserid+" "
+                  +  " OR ( "
+                  +         " AND friend.friendid = "+currentuserid+" "
+                  +         " AND friend.relationshipLevel = 1 "// -- FRIEND
+                  +         " AND igotit.accesslevel = 2 " // -- FRIEND
+                  +  " ) "
+                  +  " OR ( "
+                  +         " AND friend.friendid = "+currentuserid+" "
+                  +         " AND friend.relationshipLevel = 0 " // -- FOLLOWER
+                  +         " AND igotit.accesslevel = 1 " // -- FOLLOWER
+                  +  " ) "
+                  +  " OR ( "
+                  +         " AND igotit.accesslevel = 2 "// -- PUBLIC
+                  +  " )"
+                  + ")";
+        }
+        return strWhere;
+    }
 }

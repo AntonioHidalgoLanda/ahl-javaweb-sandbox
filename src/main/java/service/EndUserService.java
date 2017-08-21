@@ -34,7 +34,7 @@ public class EndUserService {
     
     BasicDataSource connectorPool = null;
     
-    EndUserService(){
+    public EndUserService(){
         try {
             this.connectorPool = DataSourceSingleton.getConnectionPool();
         } catch (SQLException | URISyntaxException ex) {
