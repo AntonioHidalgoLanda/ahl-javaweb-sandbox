@@ -15,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
+import product.SessionMediator;
 
 /**
  *
@@ -32,6 +33,7 @@ public class PostgreSQLMediator implements SqlMediator{
     private int nId = -1;
     private String tablename = "";
     private String lastQuery = "";
+    private String alias = "";
 
     public PostgreSQLMediator(BasicDataSource connectionPool) {
         this.connectionPool = connectionPool;
@@ -147,6 +149,9 @@ public class PostgreSQLMediator implements SqlMediator{
             if (!csv.isEmpty()){
                 csv += " "+delimiter+" ";
             }
+            if(!this.alias.isEmpty()){
+                csv += this.alias +".";
+            }
             csv += o.toString();
         }
         return csv;
@@ -162,6 +167,9 @@ public class PostgreSQLMediator implements SqlMediator{
         for (String fieldname : listParams){
             if (!strSet.isEmpty()){
                 strSet += " "+delimiter+" ";
+            }
+            if(!this.alias.isEmpty()){
+                strSet += this.alias +".";
             }
             strSet += fieldname + " = ? ";
         }
@@ -267,6 +275,7 @@ public class PostgreSQLMediator implements SqlMediator{
                 
                 updateSql.executeUpdate();
             } catch (Exception e) {
+                System.err.println("ERROR DURING UPDATE:");
                 System.err.println(e);
             }
             return this;
@@ -297,11 +306,12 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator runFind(double threshold) {
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
+        this.alias = "t";
         this.lastQuery = "SELECT DISTINCT "
                 + this.listToCsvString(this.listFindFields)
-                + " FROM " + this.tablename;
-    //    this.lastQuery += this.accessibilityFindJoin();
-        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty() /*|| this.accesibilityFindContainsWhere()*/){
+                + " FROM " + this.tablename +" "+this.alias;
+        this.lastQuery += this.accessibilityFindJoin();
+        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty() || this.accesibilityFindContainsWhere()){
             this.lastQuery += " WHERE ";
             if (!listParams.isEmpty()){
                 this.lastQuery += this.listOfPairs(listParams, "AND");
@@ -310,15 +320,14 @@ public class PostgreSQLMediator implements SqlMediator{
                 if (!listParams.isEmpty()){
                     this.lastQuery += " AND ";
                 }
-                this.lastQuery += " id = ? ";
+                this.lastQuery += " "+this.alias+".id = ? ";
             }
-            /*
             if (this.accesibilityFindContainsWhere()){
                 if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
                     this.lastQuery += " AND ";
                 }
                 this.lastQuery += this.accessibilityFindWhere();
-            }*/
+            }
         }
 
         try (Connection connection = this.connectionPool.getConnection()){
@@ -351,8 +360,11 @@ public class PostgreSQLMediator implements SqlMediator{
             this.listFindResult.add(result);
           }
         } catch (Exception e) {
-            System.err.println(e);//e.getMessage()
+            System.err.println("ERROR DURING FIND:");
+            System.err.println(e);
+            System.err.println(this.lastQuery);
         }
+        this.alias = "";
         return this;
     }
 
@@ -360,8 +372,9 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator runDelete() {
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
+        this.alias = "t";
         this.lastQuery =
-                "DELETE FROM " + this.tablename
+                "DELETE FROM " + this.tablename + " "+ this.alias
                     + " WHERE ";
 
         if (!listParams.isEmpty()){
@@ -377,8 +390,10 @@ public class PostgreSQLMediator implements SqlMediator{
 
             updateSql.executeUpdate();
         } catch (Exception e) {
+            System.err.println("ERROR DURING DELETE:");
             System.err.println(e);
         }
+        this.alias = "";
         return this;
     }
 
@@ -408,15 +423,15 @@ public class PostgreSQLMediator implements SqlMediator{
         String strJoin = "";
         switch (this.tablename.toLowerCase()){
             case "igotit":
-                strJoin = " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                strJoin = " LEFT JOIN friend f ON f.enduserid = "+this.alias+".enduserid ";
                 break;
             case "photo":
-                strJoin = " INNER JOIN igotit ON igotit.igotitId = photo.igotitId";
-                strJoin += " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                strJoin = " INNER JOIN igotit i ON i.id = "+this.alias+".igotitId";
+                strJoin += " LEFT JOIN friend f ON f.enduserid = i.enduserid ";
                 break;
             case "tag":
-                strJoin = " INNER JOIN igotit ON igotit.igotitId = tag.igotitId";
-                strJoin += " INNER JOIN friend ON friend.enduserid = igotit.enduserid ";
+                strJoin = " INNER JOIN igotit i ON i.id = "+this.alias+".igotitId";
+                strJoin += " LEFT JOIN friend f ON f.enduserid = i.enduserid ";
                 break;
         }
         return strJoin;
@@ -424,26 +439,28 @@ public class PostgreSQLMediator implements SqlMediator{
     
     private String accessibilityFindWhere() {
         String strWhere = "";
-        int currentuserid = -1;
-        System.err.println("ERROR: currentuserid is not defined;");
+        int currentuserid = SessionMediator.getCurrentUserId();
+        String igotitAlias = this.alias;
+        
         switch (this.tablename.toLowerCase()){
-            case "igotit":
             case "photo":
             case "tag":
+                igotitAlias = "i";
+            case "igotit":
                 strWhere = "( "
-                  +         " igotit.enduserid = "+currentuserid+" "
+                  +         " "+igotitAlias+".enduserid = "+currentuserid+" "
                   +  " OR ( "
-                  +         " AND friend.friendid = "+currentuserid+" "
-                  +         " AND friend.relationshipLevel = 1 "// -- FRIEND
-                  +         " AND igotit.accesslevel = 2 " // -- FRIEND
+                  +         "  f.friendid = "+currentuserid+" "
+                  +         " AND f.relationship = 1 " // -- FRIEND
+                  +         " AND "+igotitAlias+".accesslevel = 2 " // -- FRIEND
                   +  " ) "
                   +  " OR ( "
-                  +         " AND friend.friendid = "+currentuserid+" "
-                  +         " AND friend.relationshipLevel = 0 " // -- FOLLOWER
-                  +         " AND igotit.accesslevel = 1 " // -- FOLLOWER
+                  +         "  f.friendid = "+currentuserid+" "
+                  +         " AND f.relationship = 0 " // -- FOLLOWER
+                  +         " AND "+igotitAlias+".accesslevel = 1 " // -- FOLLOWER
                   +  " ) "
                   +  " OR ( "
-                  +         " AND igotit.accesslevel = 2 "// -- PUBLIC
+                  +         "  "+igotitAlias+".accesslevel = 2 " // -- PUBLIC
                   +  " )"
                   + ")";
         }

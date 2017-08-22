@@ -22,18 +22,19 @@ import service.EndUserService;
  * @author antonio
  */
 public class SessionMediator {
-    final static String USERID_SESSION_NAME = "enduserid";
-    private static SessionMediator singleton;
+    final static String USERID_SESSION_NAME = "enduserid",
+            OAUTH_DETAILS_USERNAME = "name";
     
-    private SessionMediator(){
-        
+    private static boolean testingEmulation = false;
+    private static int testingEmulationUserId = 1;
+    
+    public static void setEmulationMode(int userid){
+        testingEmulation = true;
+        testingEmulationUserId = userid;
     }
     
-    static public SessionMediator getSessionMediator() {
-        if (singleton == null){
-            singleton = new SessionMediator();
-        }
-        return singleton;
+    public static void setProductionMode(){
+        testingEmulation = false;
     }
     
     public static String getOAuthUserName(){
@@ -42,7 +43,7 @@ public class SessionMediator {
       if (oauth instanceof OAuth2Authentication){
           Object od = ((OAuth2Authentication)oauth).getUserAuthentication().getDetails();
           if (od instanceof Map){
-              username = ((Map)od).get("name").toString();
+              username = ((Map)od).get(OAUTH_DETAILS_USERNAME).toString();
           }
       }
       return username;
@@ -51,6 +52,16 @@ public class SessionMediator {
     public static HttpSession session() {
         ServletRequestAttributes attr = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         return attr.getRequest().getSession(true); // true == allow create
+    }
+    
+    public static int getCurrentUserId(){
+        if (testingEmulation){
+            System.err.println("WARNING: you are running in test mode.");
+            return testingEmulationUserId;
+        }
+        HttpSession httpSession = session();
+        String strId = httpSession.getAttribute(USERID_SESSION_NAME).toString();
+        return Integer.parseInt(strId);
     }
     
     public static String sessionToString(){
@@ -65,7 +76,7 @@ public class SessionMediator {
         return s;
     }
     
-    public SessionMediator validateSessionUser() {
+    public static void validateSessionUser() {
         HttpSession httpSession = session();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!(authentication instanceof AnonymousAuthenticationToken)
@@ -93,8 +104,6 @@ public class SessionMediator {
             }
             httpSession.setAttribute(USERID_SESSION_NAME, userid);
             
-            
         }
-        return this;
     }
 }

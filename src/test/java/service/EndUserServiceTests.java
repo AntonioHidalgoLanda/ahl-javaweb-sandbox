@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import product.SessionMediator;
 import utils.TestUtils;
 /**
  *
@@ -70,6 +71,7 @@ public class EndUserServiceTests {
         find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);
         int currentSize = find.size();
         listId.stream().forEach((id) -> {
+            SessionMediator.setEmulationMode(id);
             eus.delete(id);
         });
         find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);

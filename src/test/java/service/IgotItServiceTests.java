@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import product.SessionMediator;
 import utils.TestUtils;
 
 /**
@@ -84,6 +85,7 @@ public class IgotItServiceTests {
         EndUserService eus = new EndUserService();
         eust.smokeCreate(eus, listEndusersId);
         int euid = listEndusersId.get(0);
+        SessionMediator.setEmulationMode(euid);
         
         // create
         this.smokeCreate(bs, listId,euid);
