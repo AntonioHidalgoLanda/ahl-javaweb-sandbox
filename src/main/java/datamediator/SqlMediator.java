@@ -5,7 +5,6 @@
  */
 package datamediator;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +15,8 @@ import java.util.Map;
 public interface SqlMediator {
     public SqlMediator clear();
     public SqlMediator setTable(String tablename);
+    public SqlMediator setAccessId(String accessId);
+    public SqlMediator setAccessTable(String accessTableName);
     public SqlMediator addUpsertParam(String fieldname,String value);
     public SqlMediator addUpsertParam(String fieldname,double value);
     public SqlMediator addUpsertParam(String fieldname,int value);
@@ -59,4 +60,8 @@ public interface SqlMediator {
      */
     public SqlMediator runDelete();
     public List<Map<String,Object>> getResultsFind();
+    public boolean hasFullAccess(int id);
+    public boolean hasReadAccess(int id);
+    public SqlMediator grantAccess(boolean readonly, List<Integer> listId);
+    public SqlMediator revokeAccess(List<Integer> listId);
 }

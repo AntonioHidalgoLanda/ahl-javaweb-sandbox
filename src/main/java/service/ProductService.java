@@ -149,6 +149,8 @@ public class ProductService {
     public List<Integer> getStore(int productId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .setAccessId("storeId")
+                .setAccessTable("store")
                 .addFindField("storeId")
                 .addFindField("productId")
                 .addFindParam("productId", productId, 1)
@@ -164,6 +166,8 @@ public class ProductService {
     public List<Integer> getIgotit(int productId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
                 .addFindField("igotitId")
                 .addFindField("productId")
                 .addFindParam("productId", productId, 1)
@@ -216,7 +220,9 @@ public class ProductService {
            @RequestParam(value="storeId", required=true) int storeId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("storeProduct");
+        sm.setTable("storeProduct")
+                .setAccessId("storeId")
+                .setAccessTable("store");
         sm.addUpsertParam("storeId", storeId)
           .addUpsertParam("productId", productId);
         sm.runUpsert();
@@ -229,7 +235,9 @@ public class ProductService {
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct");
+        sm.setTable("igotitProduct")
+                .setAccessTable("igotit")
+                .setAccessId("igotitId");
         sm.addUpsertParam("igotitId", igotitId)
           .addUpsertParam("productId", productId);
         sm.runUpsert();
@@ -253,6 +261,8 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .setAccessId("storeId")
+                .setAccessTable("store")
                 .addFindParam("storeId", storeId, 1)
                 .addFindParam("productId", productId, 1);
         sm.runDelete();
@@ -266,6 +276,8 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
                 .addFindParam("igotitId", igotitId, 1)
                 .addFindParam("productId", productId, 1);
         sm.runDelete();

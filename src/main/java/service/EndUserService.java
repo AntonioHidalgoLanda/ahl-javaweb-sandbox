@@ -224,6 +224,8 @@ public class EndUserService {
         for (int i = 0; i <= nLevel; i++){
             sm.clear()
                     .setTable("friend")
+                    .setAccessId("enduserid")
+                    .setAccessTable("enduser")
                     .addFindField("friendid")
                     .addFindField("enduserid")
                     .addFindParam("enduserid", enduserid, 1)
@@ -260,9 +262,11 @@ public class EndUserService {
     ){
         RelationshipLevel rLevel = relationshipLevelParse(sLevel);
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("friend");
-        sm.addUpsertParam("enduserid", enduserid)
-          .addUpsertParam("friendid", friendid);
+        sm.setTable("friend")
+                .setAccessId("enduserid")
+                .setAccessTable("enduser")
+                .addUpsertParam("enduserid", enduserid)
+                .addUpsertParam("friendid", friendid);
         // note that default in INSERTS will be FRIEND
         if (rLevel != RelationshipLevel.NONE){
             sm.addUpsertParam(
@@ -281,6 +285,8 @@ public class EndUserService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("friend")
+                .setAccessId("enduserid")
+                .setAccessTable("enduser")
                 .addFindParam("enduserid", enduserid, 1);
         if (friendid>0){
             sm.addFindParam("friendid", friendid, 1);

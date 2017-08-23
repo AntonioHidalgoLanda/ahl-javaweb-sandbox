@@ -120,6 +120,7 @@ public class PhotoService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
+                .setAccessTable("igotit")
                 .addFindField("id")
                 .addFindField("localpath")
                 .addFindField("igotitId");
@@ -143,7 +144,8 @@ public class PhotoService {
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo");
+        sm.setTable("photo")
+                .setAccessTable("igotit");
         if (photoID >= 0){
             sm.addId(photoID);
         }
@@ -164,6 +166,7 @@ public class PhotoService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
+                .setAccessTable("igotit")
                 .addFindParam("id", photoID, 1);
         sm.runDelete();
         return ""+photoID;

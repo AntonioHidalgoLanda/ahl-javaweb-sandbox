@@ -178,6 +178,8 @@ public class IgotItService {
     public List<Integer> getProducts(int igotitId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
                 .addFindField("igotitId")
                 .addFindField("productId")
                 .addFindParam("igotitId", igotitId, 1)
@@ -193,6 +195,8 @@ public class IgotItService {
     public List<String> getTags(int igotitId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
                 .addFindField("name")
                 .addFindField("igotitId")
                 .addFindParam("igotitId", igotitId, 1)
@@ -245,9 +249,11 @@ public class IgotItService {
            @RequestParam(value="productId", required=true) int productId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct");
-        sm.addUpsertParam("productId", productId)
-          .addUpsertParam("igotitId", igotitId);
+        sm.setTable("igotitProduct")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
+                .addUpsertParam("productId", productId)
+                .addUpsertParam("igotitId", igotitId);
         sm.runUpsert();
         return sm.getId();
     }
@@ -260,7 +266,9 @@ public class IgotItService {
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag");
         sm.addUpsertParam("name",tag)
-             .addUpsertParam("igotitId", igotitId);
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
+                .addUpsertParam("igotitId", igotitId);
         sm.runUpsert();
         return sm.getId();
     }
@@ -289,9 +297,12 @@ public class IgotItService {
            @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct").addFindParam("igotitId", igotitId, 1);
+        sm.setTable("igotitProduct")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
+                .addFindParam("igotitId", igotitId, 1);
         if (productId>0){
-            sm.setTable("igotitProduct").addFindParam("productId", productId, 1);
+            sm.addFindParam("productId", productId, 1);
         }
         sm.runDelete();
         return ""+igotitId+":"+((productId>0)?productId:"all");

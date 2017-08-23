@@ -34,9 +34,23 @@ public class PostgreSQLMediator implements SqlMediator{
     private String tablename = "";
     private String lastQuery = "";
     private String alias = "";
+    private String accessIdColumn = "id";
+    private String accesstablename = "";
 
     public PostgreSQLMediator(BasicDataSource connectionPool) {
         this.connectionPool = connectionPool;
+    }
+    
+    @Override
+    public SqlMediator setAccessId(String accessId) {
+        this.accessIdColumn = accessId;
+        return this;
+    }
+    
+    @Override
+    public SqlMediator setAccessTable(String accessTableName) {
+        this.accesstablename = accessTableName;
+        return this;
     }
 
     @Override
@@ -311,7 +325,7 @@ public class PostgreSQLMediator implements SqlMediator{
                 + this.listToCsvString(this.listFindFields)
                 + " FROM " + this.tablename +" "+this.alias;
         this.lastQuery += this.accessibilityFindJoin();
-        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty() || this.accesibilityFindContainsWhere()){
+        if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
             this.lastQuery += " WHERE ";
             if (!listParams.isEmpty()){
                 this.lastQuery += this.listOfPairs(listParams, "AND");
@@ -321,12 +335,6 @@ public class PostgreSQLMediator implements SqlMediator{
                     this.lastQuery += " AND ";
                 }
                 this.lastQuery += " "+this.alias+".id = ? ";
-            }
-            if (this.accesibilityFindContainsWhere()){
-                if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
-                    this.lastQuery += " AND ";
-                }
-                this.lastQuery += this.accessibilityFindWhere();
             }
         }
 
@@ -408,62 +416,110 @@ public class PostgreSQLMediator implements SqlMediator{
         return new ArrayList<>(listFindResult);
     }
 
-    private boolean accesibilityFindContainsWhere() {
-        switch (this.tablename.toLowerCase()){
-            case "igotit":
-            case "photo":
-            case "tag":
-                return true;
-            default:
-                return false;
-        }
-    }
-
     private String accessibilityFindJoin() {
-        String strJoin = "";
-        switch (this.tablename.toLowerCase()){
-            case "igotit":
-                strJoin = " LEFT JOIN friend f ON f.enduserid = "+this.alias+".enduserid ";
-                break;
-            case "photo":
-                strJoin = " INNER JOIN igotit i ON i.id = "+this.alias+".igotitId";
-                strJoin += " LEFT JOIN friend f ON f.enduserid = i.enduserid ";
-                break;
-            case "tag":
-                strJoin = " INNER JOIN igotit i ON i.id = "+this.alias+".igotitId";
-                strJoin += " LEFT JOIN friend f ON f.enduserid = i.enduserid ";
-                break;
-        }
+        int currentuserid = SessionMediator.getCurrentUserId();
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        String strJoin = "INNER JOIN accessResource ar " +
+                  " ON ar.localid = "+this.alias+"."+accessIdColumn+" " +
+                  " AND ar.tablename like '"+accessTable+"' " +
+                "INNER JOIN access a " +
+                  " ON a.accessid = ar.id " +
+                  " AND a.enduserid IN ("+currentuserid+", -1) ";
         return strJoin;
     }
     
-    private String accessibilityFindWhere() {
-        String strWhere = "";
-        int currentuserid = SessionMediator.getCurrentUserId();
-        String igotitAlias = this.alias;
+    @Override
+    public boolean hasFullAccess(int id){
+        return this.hasAccess(id, true);
         
-        switch (this.tablename.toLowerCase()){
-            case "photo":
-            case "tag":
-                igotitAlias = "i";
-            case "igotit":
-                strWhere = "( "
-                  +         " "+igotitAlias+".enduserid = "+currentuserid+" "
-                  +  " OR ( "
-                  +         "  f.friendid = "+currentuserid+" "
-                  +         " AND f.relationship = 1 " // -- FRIEND
-                  +         " AND "+igotitAlias+".accesslevel = 2 " // -- FRIEND
-                  +  " ) "
-                  +  " OR ( "
-                  +         "  f.friendid = "+currentuserid+" "
-                  +         " AND f.relationship = 0 " // -- FOLLOWER
-                  +         " AND "+igotitAlias+".accesslevel = 1 " // -- FOLLOWER
-                  +  " ) "
-                  +  " OR ( "
-                  +         "  "+igotitAlias+".accesslevel = 2 " // -- PUBLIC
-                  +  " )"
-                  + ")";
-        }
-        return strWhere;
     }
+    
+    @Override
+    public boolean hasReadAccess(int id){
+        return this.hasAccess(id, false);
+    }
+    
+    private boolean hasAccess(int id, boolean fullaccess){
+        boolean anyResults = false;
+        int currentuserid = SessionMediator.getCurrentUserId();
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        
+        String query = "SELECT DISTINCT a.enduserid, a.accessid, ar.tablename, ar.localid"
+                + " FROM access a "
+                + " INNER JOIN accessResource ar " +
+                      " ON a.accessid = ar.id " +
+                      " AND ar.localid = "+ id +" " +
+                      " AND ar.tablename like '"+accessTable+"' " +
+                      " AND a.enduserid IN ("+currentuserid+", -1) ";
+        if (fullaccess) {
+            query += " AND a.readonly = false ";
+        }
+
+
+        try (Connection connection = this.connectionPool.getConnection()){
+            PreparedStatement stmt = connection.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            
+            anyResults = rs.isBeforeFirst();
+
+        } catch (Exception e) {
+            System.err.println("ERROR DURING HAS ACCESS:");
+            System.err.println(e);
+            System.err.println(query);
+        }
+        return anyResults;
+    }
+    
+    @Override
+    public SqlMediator grantAccess(boolean readonly, List<Integer> listId){
+        int currentuserid = SessionMediator.getCurrentUserId();
+        return this.grantAccess(readonly, listId, currentuserid);
+    }
+    
+    public SqlMediator grantAccess(boolean readonly, List<Integer> listId, int userid){
+        this.revokeAccess(listId);
+        
+        String query = "INSERT INTO access (enduserid,accessid,readonly)";
+        query += " SELECT " + userid + ", " +
+                 " ar.id, " +
+                 Boolean.toString(readonly) +" " +
+                " FROM accessResource ar " +
+                " WHERE ar.localid IN (" + this.listToCsvString(listId) +")";
+
+            try (Connection connection = this.connectionPool.getConnection()){
+                PreparedStatement updateSql = connection.prepareStatement(query);
+
+                ResultSet rs = updateSql.executeQuery();
+
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+                
+        return this;
+        
+    }
+    
+    // listId of the ids entered in accessResources as local id
+    @Override
+    public SqlMediator revokeAccess(List<Integer> listId){
+        int currentuserid = SessionMediator.getCurrentUserId();
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        String query =
+                "DELETE FROM access a " +
+                " USING accessResource ar " +
+                " WHERE a.accessid = ar.id " +
+                    " AND a.enduserid IN (" + currentuserid + ", -1) " + 
+                    " AND ar.tablename Like '" + accessTable + "'" +
+                    " AND ar.localid IN (" +this.listToCsvString(listId) + ")";
+                
+        try (Connection connection = this.connectionPool.getConnection()){
+            PreparedStatement updateSql = connection.prepareStatement(query);
+            updateSql.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("ERROR DURING DENNY ACCESS:");
+            System.err.println(e);
+        }
+        return this;
+    }
+   
 }
