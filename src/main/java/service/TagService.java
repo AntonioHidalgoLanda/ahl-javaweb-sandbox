@@ -43,6 +43,7 @@ public class TagService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindField("name")
@@ -64,6 +65,7 @@ public class TagService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addId(name)
@@ -80,6 +82,7 @@ public class TagService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindParam("name", name, 1)

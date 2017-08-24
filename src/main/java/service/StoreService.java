@@ -182,6 +182,7 @@ public class StoreService {
     public List<Integer> getProducts(int storeId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store")
                 .addFindField("productId")
@@ -210,6 +211,7 @@ public class StoreService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store");
         sm.addUpsertParam("productId", productId)
@@ -225,6 +227,7 @@ public class StoreService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store")
                 .addFindParam("storeId", storeId, 1)

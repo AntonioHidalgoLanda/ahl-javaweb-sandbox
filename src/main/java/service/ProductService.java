@@ -149,6 +149,7 @@ public class ProductService {
     public List<Integer> getStore(int productId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store")
                 .addFindField("storeId")
@@ -166,6 +167,7 @@ public class ProductService {
     public List<Integer> getIgotit(int productId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindField("igotitId")
@@ -221,6 +223,7 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store");
         sm.addUpsertParam("storeId", storeId)
@@ -236,6 +239,7 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessTable("igotit")
                 .setAccessId("igotitId");
         sm.addUpsertParam("igotitId", igotitId)
@@ -261,6 +265,7 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("storeProduct")
+                .turnIdOff()
                 .setAccessId("storeId")
                 .setAccessTable("store")
                 .addFindParam("storeId", storeId, 1)
@@ -276,6 +281,7 @@ public class ProductService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindParam("igotitId", igotitId, 1)

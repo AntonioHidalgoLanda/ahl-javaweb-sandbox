@@ -14,6 +14,8 @@ import java.util.Map;
  */
 public interface SqlMediator {
     public SqlMediator clear();
+    public SqlMediator turnIdOff();
+    public SqlMediator turnIdOn();
     public SqlMediator setTable(String tablename);
     public SqlMediator setAccessId(String accessId);
     public SqlMediator setAccessTable(String accessTableName);

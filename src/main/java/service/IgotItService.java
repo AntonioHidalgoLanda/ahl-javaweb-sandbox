@@ -163,6 +163,8 @@ public class IgotItService {
     public List<Integer> getPhotos(int igotitId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("photo")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
                 .addFindField("id")
                 .addFindField("igotitId")
                 .addFindParam("igotitId", igotitId, 1)
@@ -178,6 +180,7 @@ public class IgotItService {
     public List<Integer> getProducts(int igotitId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindField("igotitId")
@@ -195,6 +198,7 @@ public class IgotItService {
     public List<String> getTags(int igotitId){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindField("name")
@@ -236,7 +240,9 @@ public class IgotItService {
            @RequestParam(value="photoId", required=true) int photoId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo");
+        sm.setTable("photo")
+                .setAccessId("igotitId")
+                .setAccessTable("igotit");
         sm.addId(photoId)
              .addUpsertParam("igotitId", igotitId);
         sm.runUpsert();
@@ -250,6 +256,7 @@ public class IgotItService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addUpsertParam("productId", productId)
@@ -266,6 +273,7 @@ public class IgotItService {
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("tag");
         sm.addUpsertParam("name",tag)
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addUpsertParam("igotitId", igotitId);
@@ -298,6 +306,7 @@ public class IgotItService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("igotitProduct")
+                .turnIdOff()
                 .setAccessId("igotitId")
                 .setAccessTable("igotit")
                 .addFindParam("igotitId", igotitId, 1);

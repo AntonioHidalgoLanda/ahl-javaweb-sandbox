@@ -37,9 +37,22 @@ public class PostgreSQLMediator implements SqlMediator{
     private String alias = "";
     private String accessIdColumn = "id";
     private String accesstablename = "";
+    private boolean buseId = true;
 
     public PostgreSQLMediator(BasicDataSource connectionPool) {
         this.connectionPool = connectionPool;
+    }
+
+    @Override
+    public SqlMediator turnIdOff() {
+        this.buseId = false;
+        return this;
+    }
+
+    @Override
+    public SqlMediator turnIdOn() {
+        this.buseId = true;
+        return this;
     }
     
     @Override
@@ -243,7 +256,10 @@ public class PostgreSQLMediator implements SqlMediator{
                     !this.mapDoubleParam.isEmpty()){
                 String statementFields = " (";
                 String statementValues = ") VALUES (";
-                String statementClosing = ") Returning id;";
+                String statementClosing = ") ";
+                if (this.buseId){
+                    statementClosing += " Returning id;";
+                }
                
                 this.lastQuery += statementFields + strListValues
                         + statementValues + strListFields
@@ -256,8 +272,11 @@ public class PostgreSQLMediator implements SqlMediator{
                     }
 
                     ResultSet rs = updateSql.executeQuery();
-                    rs.next();
-                    nNewId = rs.getInt(1);
+                    if (this.buseId){
+                        rs.next();
+                        nNewId = rs.getInt(1);
+                        this.createAccessResource(nNewId);
+                    }
 
                 } catch (Exception e) {
                     System.err.println(e);
@@ -482,6 +501,27 @@ public class PostgreSQLMediator implements SqlMediator{
         return anyResults;
     }
     
+    private SqlMediator createAccessResource(int localid){
+        if (this.accesstablename.isEmpty()){
+            String query = "INSERT INTO accessResource (tablename,localid)";
+            query += " VALUES ( "+this.tablename+", "+localid+") " ;
+
+            try (Connection connection = this.connectionPool.getConnection()){
+                PreparedStatement updateSql = connection.prepareStatement(query);
+
+                updateSql.executeQuery();
+
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        }    
+        return this;
+    }
+    
+    private SqlMediator removeAccessResource(int localid){
+        return this;
+    }
+    
     @Override
     public SqlMediator grantAccess(boolean readonly, List<Integer> listId){
         int currentuserid = SessionMediator.getCurrentUserId();
@@ -490,6 +530,7 @@ public class PostgreSQLMediator implements SqlMediator{
     
     @Override
     public SqlMediator grantAccess(boolean readonly, List<Integer> listResource, List<Integer> listUserID){
+        this.revokeAccess(listResource, listUserID);    // revoking readonly/readfull rights
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
         
         String query = "INSERT INTO access (enduserid,accessid,readonly)";

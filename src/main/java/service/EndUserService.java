@@ -223,6 +223,7 @@ public class EndUserService {
         int nLevel = EndUserService.relationshipLevelToSql(level);
         for (int i = 0; i <= nLevel; i++){
             sm.clear()
+                    .turnIdOff()
                     .setTable("friend")
                     .setAccessId("enduserid")
                     .setAccessTable("enduser")
@@ -263,6 +264,7 @@ public class EndUserService {
         RelationshipLevel rLevel = relationshipLevelParse(sLevel);
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("friend")
+                .turnIdOff()
                 .setAccessId("enduserid")
                 .setAccessTable("enduser")
                 .addUpsertParam("enduserid", enduserid)
@@ -285,6 +287,7 @@ public class EndUserService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("friend")
+                .turnIdOff()
                 .setAccessId("enduserid")
                 .setAccessTable("enduser")
                 .addFindParam("enduserid", enduserid, 1);
