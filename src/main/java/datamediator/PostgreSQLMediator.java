@@ -421,7 +421,7 @@ public class PostgreSQLMediator implements SqlMediator{
         int currentuserid = SessionMediator.getCurrentUserId();
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
         String strJoin = "INNER JOIN accessResource ar " +
-                  " ON ar.localid = "+this.alias+"."+accessIdColumn+" " +
+                  " ON ar.localid = "+this.alias+"."+this.accessIdColumn+" " +
                   " AND ar.tablename like '"+accessTable+"' " +
                 "INNER JOIN access a " +
                   " ON a.accessid = ar.id " +
@@ -490,13 +490,15 @@ public class PostgreSQLMediator implements SqlMediator{
     
     @Override
     public SqlMediator grantAccess(boolean readonly, List<Integer> listResource, List<Integer> listUserID){
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
         
         String query = "INSERT INTO access (enduserid,accessid,readonly)";
         query += " SELECT u.id, " +
                  " ar.id, " +
                  Boolean.toString(readonly) +" " +
                 " FROM accessResource ar, enduser u " +
-                " WHERE ar.localid IN (" + this.listToCsvString(listResource) +")"+
+                " WHERE ar.tablename Like '" + accessTable + "'"+
+                   " AND ar.localid IN (" + this.listToCsvString(listResource) +")"+
                    " AND ur.id IN (" + this.listToCsvString(listUserID) +")";
 
             try (Connection connection = this.connectionPool.getConnection()){
