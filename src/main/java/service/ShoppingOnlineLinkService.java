@@ -39,17 +39,29 @@ public class ShoppingOnlineLinkService {
     @RequestMapping(value = "/shoppingOnlineLinks", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
-           @RequestParam(value="federationId", required=false, defaultValue="") String federationId
+           @RequestParam(value="url", required=false, defaultValue="") String url,
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId,
+           @RequestParam(value="resellerId", required=false, defaultValue="-1") int resellerId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("shoppingOnlineLink")
+                .setAccessTable("reseller")
+                .setAccessId("resellerId")
                 .addFindField("id")
-                .addFindField("federationId");
+                .addFindField("url")
+                .addFindField("productId")
+                .addFindField("resellerId");
         if (shoppingOnlineLinkID >= 0){
             sm.addFindParam("id", shoppingOnlineLinkID, 1);
         }
-        if (!federationId.isEmpty()){
-            sm.addFindParam("federationId", federationId, 1);
+        if (!url.isEmpty()){
+            sm.addFindParam("url", url, 1);
+        }
+        if (productId > 0){
+            sm.addFindParam("productId", productId, 1);
+        }
+        if (resellerId > 0){
+            sm.addFindParam("resellerId", resellerId, 1);
         }
         sm.runFind();
         return sm.getResultsFind();
@@ -58,15 +70,25 @@ public class ShoppingOnlineLinkService {
     @RequestMapping(value = "/shoppingOnlineLink", method = RequestMethod.POST)
     public @ResponseBody String upsert(
             @RequestParam(value="id", required=false, defaultValue="-1") int shoppingOnlineLinkID,
-           @RequestParam(value="federationId", required=false, defaultValue="") String federationId
+           @RequestParam(value="url", required=false, defaultValue="") String url,
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId,
+           @RequestParam(value="resellerId", required=false, defaultValue="-1") int resellerId
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("shoppingOnlineLink");
+        sm.setTable("shoppingOnlineLink")
+                .setAccessTable("reseller")
+                .setAccessId("resellerId");
         if (shoppingOnlineLinkID >= 0){
             sm.addId(shoppingOnlineLinkID);
         }
-        if (!federationId.isEmpty()){
-            sm.addUpsertParam("federationId", federationId);
+        if (!url.isEmpty()){
+            sm.addUpsertParam("url", url);
+        }
+        if (productId > 0){
+            sm.addUpsertParam("productId", productId);
+        }
+        if (resellerId > 0){
+            sm.addUpsertParam("resellerId", resellerId);
         }
         sm.runUpsert();
         return sm.getId();
@@ -79,6 +101,8 @@ public class ShoppingOnlineLinkService {
     ){
         PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         sm.setTable("shoppingOnlineLink")
+                .setAccessId("resellerId")
+                .setAccessTable("reseller")
                 .addFindParam("id", shoppingOnlineLinkID, 1);
         sm.runDelete();
         return ""+shoppingOnlineLinkID;

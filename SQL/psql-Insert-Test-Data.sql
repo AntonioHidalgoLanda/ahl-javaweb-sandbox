@@ -143,6 +143,7 @@ INSERT INTO access (enduserid, accessid, readonly)
 
 --
 -- TAG
+-- Igotit Accessibility
 --
 INSERT INTO tag (name,igotitId) VALUES ( 'test',1);
 INSERT INTO tag (name,igotitId) VALUES ( ':love:',1);
@@ -155,6 +156,7 @@ INSERT INTO tag (name,igotitId) VALUES ( '#hastagging',3);
 
 --
 -- PHOTO
+-- Igotit Accessibility
 --
 INSERT INTO photo (id,localpath,igotitId) VALUES (1,'photos/coat-of-arms.png',3);
 
@@ -201,7 +203,6 @@ INSERT INTO access (enduserid, accessid, readonly)
 --
 -- SHOPPING ONLINE LINK
 --
-/* We need to use setTable("reseller")
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (1,'test_url r1 p1 ', 1,1);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (2,'test_url r1 p1 ', 1,2);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (3,'test_url r1 p1 ', 2,1);
@@ -210,30 +211,50 @@ INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (5,'test_url
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (6,'test_url r1 p1 ', 5,3);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (7,'test_url r1 p1 ', 6,5);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (8,'test_url r1 p1 ', 6,4);
-*/
 
 --
 -- STORE
+-- Dependant on resellerId
 --
-/* NEEDS Accessibility 
 INSERT INTO store (id,resellerId,numberStreet,country,postCode) VALUES (1, 1,'test_street 1','GBR','AB1 2CD');
+INSERT INTO accessResource (id, tablename, localid)
+    VALUES ( 26, 'store', 1);
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( 4, 26, 'false');
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( -1, 26, 'true');
+
 INSERT INTO store (id,resellerId,numberStreet,country,postCode) VALUES (2, 1,'test_street 2','GBR','AB1 2CD"');
+INSERT INTO accessResource (id, tablename, localid)
+    VALUES ( 27, 'store', 2);
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( 4, 27, 'false');
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( -1, 27, 'true');
+
 INSERT INTO store (id,resellerId,numberStreet,country,postCode) VALUES (3, 4,'test_street 3','GBR','AB1 2CD');
-*/
+INSERT INTO accessResource (id, tablename, localid)
+    VALUES ( 28, 'store', 3);
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( 4, 28, 'false');
+INSERT INTO access (enduserid, accessid, readonly)
+    VALUES ( -1, 28, 'true');
+
+
 
 --
 -- STORE PRODUCT
+-- Store Accessibility
 --
-/* we need to insert Store first
 INSERT INTO storeProduct (productId,storeId) VALUES (1,1 );
 INSERT INTO storeProduct (productId,storeId) VALUES (2,1 );
 INSERT INTO storeProduct (productId,storeId) VALUES (3,2 );
 INSERT INTO storeProduct (productId,storeId) VALUES (4,3 );
 INSERT INTO storeProduct (productId,storeId) VALUES (5,3 );
-*/
 
 --
 -- IGOTIT PRODUCT
+-- Igotit Accessibility
 --
 INSERT INTO igotitProduct (igotitId ,productId) VALUES (1, 1);
 INSERT INTO igotitProduct (igotitId ,productId) VALUES (2, 1);
@@ -241,6 +262,7 @@ INSERT INTO igotitProduct (igotitId ,productId) VALUES (3, 2);
 
 --
 -- FRIEND
+-- Enduser Accessibility
 --
 INSERT INTO friend (enduserid,friendid,relationship) VALUES (1,2,0 );
 INSERT INTO friend (enduserid,friendid,relationship) VALUES (1,3,1 );
