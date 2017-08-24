@@ -400,6 +400,12 @@ public class PostgreSQLMediator implements SqlMediator{
     public SqlMediator runDelete() {
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
+        if(this.nId > 0){
+            this.clearAccessResource(nId);
+        } else if (this.mapIntParam.containsKey("id")){
+            this.clearAccessResource(this.mapIntParam.get("id"));
+        }
+        
         this.alias = "t";
         this.lastQuery =
                 "DELETE FROM " + this.tablename + " "+ this.alias
@@ -505,6 +511,25 @@ public class PostgreSQLMediator implements SqlMediator{
         if (this.accesstablename.isEmpty()){
             String query = "INSERT INTO accessResource (tablename,localid)";
             query += " VALUES ( "+this.tablename+", "+localid+") " ;
+
+            try (Connection connection = this.connectionPool.getConnection()){
+                PreparedStatement updateSql = connection.prepareStatement(query);
+
+                updateSql.executeQuery();
+
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        }    
+        return this;
+    }
+    
+    private SqlMediator clearAccessResource(int localid){
+        if (this.accesstablename.isEmpty()){
+            String query = "DELETE FROM accessResource "
+                    + " WHERE "
+                    +    " tablename like '"+this.tablename+"'"
+                    +  " AND localid = " + localid;
 
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
