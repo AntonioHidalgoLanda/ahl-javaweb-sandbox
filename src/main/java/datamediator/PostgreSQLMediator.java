@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -430,18 +431,29 @@ public class PostgreSQLMediator implements SqlMediator{
     
     @Override
     public boolean hasFullAccess(int id){
-        return this.hasAccess(id, true);
+        int currentuserid = SessionMediator.getCurrentUserId();
+        return this.hasAccess(id, currentuserid, true);
         
+    }
+
+    @Override
+    public boolean hasFullAccess(int resourceid, int userid) {
+        return this.hasAccess(resourceid, userid, true);
     }
     
     @Override
     public boolean hasReadAccess(int id){
-        return this.hasAccess(id, false);
-    }
-    
-    private boolean hasAccess(int id, boolean fullaccess){
-        boolean anyResults = false;
         int currentuserid = SessionMediator.getCurrentUserId();
+        return this.hasAccess(id, currentuserid, false);
+    }
+
+    @Override
+    public boolean hasReadAccess(int resourceid, int userid) {
+        return this.hasAccess(resourceid, userid, false);
+     }
+    
+    private boolean hasAccess(int id, int userid, boolean fullaccess){
+        boolean anyResults = false;
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
         
         String query = "SELECT DISTINCT a.enduserid, a.accessid, ar.tablename, ar.localid"
@@ -450,7 +462,7 @@ public class PostgreSQLMediator implements SqlMediator{
                       " ON a.accessid = ar.id " +
                       " AND ar.localid = "+ id +" " +
                       " AND ar.tablename like '"+accessTable+"' " +
-                      " AND a.enduserid IN ("+currentuserid+", -1) ";
+                      " AND a.enduserid IN ("+userid+", -1) ";
         if (fullaccess) {
             query += " AND a.readonly = false ";
         }
@@ -473,18 +485,19 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator grantAccess(boolean readonly, List<Integer> listId){
         int currentuserid = SessionMediator.getCurrentUserId();
-        return this.grantAccess(readonly, listId, currentuserid);
+        return this.grantAccess(readonly, listId, Arrays.asList(currentuserid));
     }
     
-    public SqlMediator grantAccess(boolean readonly, List<Integer> listId, int userid){
-        this.revokeAccess(listId);
+    @Override
+    public SqlMediator grantAccess(boolean readonly, List<Integer> listResource, List<Integer> listUserID){
         
         String query = "INSERT INTO access (enduserid,accessid,readonly)";
-        query += " SELECT " + userid + ", " +
+        query += " SELECT u.id, " +
                  " ar.id, " +
                  Boolean.toString(readonly) +" " +
-                " FROM accessResource ar " +
-                " WHERE ar.localid IN (" + this.listToCsvString(listId) +")";
+                " FROM accessResource ar, enduser u " +
+                " WHERE ar.localid IN (" + this.listToCsvString(listResource) +")"+
+                   " AND ur.id IN (" + this.listToCsvString(listUserID) +")";
 
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
@@ -503,14 +516,22 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator revokeAccess(List<Integer> listId){
         int currentuserid = SessionMediator.getCurrentUserId();
+        return this.revokeAccess(listId,Arrays.asList(currentuserid));
+    }
+
+    @Override
+    public SqlMediator revokeAccess(List<Integer> listResource, List<Integer> listUser) {
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        listUser.add(-1);
         String query =
                 "DELETE FROM access a " +
                 " USING accessResource ar " +
                 " WHERE a.accessid = ar.id " +
-                    " AND a.enduserid IN (" + currentuserid + ", -1) " + 
-                    " AND ar.tablename Like '" + accessTable + "'" +
-                    " AND ar.localid IN (" +this.listToCsvString(listId) + ")";
+                    " AND ar.tablename Like '" + accessTable + "'";
+        if (listUser.size() == 1){
+           query += " AND a.enduserid IN (" + this.listToCsvString(listUser) + ") ";
+        }
+           query += " AND ar.localid IN (" +this.listToCsvString(listResource) + ")";
                 
         try (Connection connection = this.connectionPool.getConnection()){
             PreparedStatement updateSql = connection.prepareStatement(query);
@@ -520,6 +541,11 @@ public class PostgreSQLMediator implements SqlMediator{
             System.err.println(e);
         }
         return this;
+    }
+    
+    @Override
+    public SqlMediator revokeAccessAllUsers(List<Integer> listId){
+        return this.revokeAccess(listId,Arrays.asList());
     }
    
 }

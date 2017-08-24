@@ -61,7 +61,12 @@ public interface SqlMediator {
     public SqlMediator runDelete();
     public List<Map<String,Object>> getResultsFind();
     public boolean hasFullAccess(int id);
+    public boolean hasFullAccess(int resourceid, int userid);
     public boolean hasReadAccess(int id);
+    public boolean hasReadAccess(int resourceid, int userid);
     public SqlMediator grantAccess(boolean readonly, List<Integer> listId);
+    public SqlMediator grantAccess(boolean readonly, List<Integer> listReource, List<Integer> listUser);
     public SqlMediator revokeAccess(List<Integer> listId);
+    public SqlMediator revokeAccess(List<Integer> listReource, List<Integer> listUser);
+    public SqlMediator revokeAccessAllUsers(List<Integer> listId);
 }

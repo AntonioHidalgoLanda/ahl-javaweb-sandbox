@@ -162,7 +162,6 @@ INSERT INTO photo (id,localpath,igotitId) VALUES (1,'photos/coat-of-arms.png',3)
 --
 -- PRODUCT
 --
--- PRODUCT Could be associeted directly with the access to the brand
 INSERT INTO product (id,sku,brandid,brandedIgotitId,name) VALUES (1,'test_SKU_X1',1,4,'product1-brand1' );
 INSERT INTO accessResource (id, tablename, localid)
     VALUES ( 20, 'product', 1);
