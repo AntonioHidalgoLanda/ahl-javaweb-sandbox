@@ -35,7 +35,6 @@ public class EndUserServiceTests {
             int id = Integer.parseInt(eus.upsert(N_NO_ID, givenFederationId, givenProfileName, givenRecoveryEmail, givenAvatarUrl));
             listId.add(id);
             find = eus.find(id, "", "","", "",false);
-System.out.println("ID: "+id);
             TestUtils.assertField(find, "federationId", givenFederationId);
             TestUtils.assertField(find, "profileName", givenProfileName);
             TestUtils.assertField(find, "recoveryEmail", givenRecoveryEmail);

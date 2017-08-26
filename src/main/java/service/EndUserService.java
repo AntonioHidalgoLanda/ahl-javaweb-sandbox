@@ -122,7 +122,6 @@ public class EndUserService  implements SqlEntityMediator{
             sm.addFindParam("avatarUrl", avatarUrl, 1);
         }
         sm.runFind();
-System.out.println(((PostgreSQLMediator)sm).getLastQuery());
         List<Map<String, Object>> result = sm.getResultsFind();
         if(bextended){
             result.stream().forEach((obj) -> {
