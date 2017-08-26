@@ -7,9 +7,12 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -25,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class BrandService {
+public class BrandService implements SqlEntityMediator{
     
     BasicDataSource connectorPool = null;
     
@@ -35,6 +38,51 @@ public class BrandService {
         } catch (SQLException | URISyntaxException ex) {
             System.err.println(ex);
         }
+    }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+        
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("brand")
+                .addFindField("id")
+                .addFindField("name")
+                .addFindField("pageurl");
+        return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        /*
+            
+            // overriding current
+            sm.revokeAccessAllUsers(Arrays.asList(newId));
+            sm.grantAccessAllUsers(false, Arrays.asList(newId));
+        */
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    // ignoring grant if there are values
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        if(!sm.hasAccessNoInitialized(entityId)){
+            sm.grantAccessAllUsers(false, Arrays.asList(entityId));
+        }
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    // revokes all access
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        return this;
     }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
@@ -52,11 +100,7 @@ public class BrandService {
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("brand")
-                .addFindField("id")
-                .addFindField("name")
-                .addFindField("pageurl");
+        SqlMediator sm = this.getSqlMediator();
         if (brandID >= 0){
             sm.addFindParam("id", brandID, 1);
         }
@@ -89,8 +133,7 @@ public class BrandService {
            @RequestParam(value="name", required=false, defaultValue="") String name,
            @RequestParam(value="pageurl", required=false, defaultValue="") String pageurl
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("brand");
+        SqlMediator sm = this.getSqlMediator();
         if (brandID >= 0){
             sm.addId(brandID);
         }
@@ -101,7 +144,10 @@ public class BrandService {
             sm.addUpsertParam("pageurl", pageurl);
         }
         sm.runUpsert();
-        return sm.getId();
+        int newId = (brandID>0)?brandID:Integer.parseInt(sm.getId());
+        this.grantAccess(newId);
+        
+        return ""+newId;
     }
     
     /** Find requests, the filters are ands, to get the full spectrum of a
@@ -112,22 +158,18 @@ public class BrandService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int brandID
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("brand")
-                .addFindParam("id", brandID, 1);
+        this.deleteProduct(brandID, -1);
+        this.revokeAccess(brandID);
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("id", brandID, 1);
         sm.runDelete();
         return ""+brandID;
     }
     
     // find products of a brand
     public List<Integer> getProducts(int brandid){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("product")
-                .addFindField("id")
-                .addFindField("brandid")
-                .addFindParam("brandid", brandid, 1)
-                .runFind();
-        List<Map<String, Object>> listObject = sm.getResultsFind();
+        ProductService ps = new ProductService();
+        List<Map<String, Object>> listObject = ps.find(-1, "", brandid, -1, "", "", false);
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
             listInt.add((Integer)obj.get("id"));
@@ -149,22 +191,26 @@ public class BrandService {
            @RequestParam(value="id", required=true) int brandid,
            @RequestParam(value="productId", required=true) int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("product");
-        sm.addId(productId)
-             .addUpsertParam("brandid", brandid);
-        sm.runUpsert();
-        return sm.getId();
+        ProductService ps = new ProductService();
+        return ps.upsert(productId, "", brandid, -1, "", "");
     }
     
     // delete a record from catalog
     @RequestMapping(value = "/brand/product", method = RequestMethod.DELETE)
     public @ResponseBody String deleteProduct(
            @RequestParam(value="id", required=true) int brandid,
-           @RequestParam(value="productId", required=true) int productId
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
         ProductService ps = new ProductService();
-        ps.delete(productId);
+        if (productId > 0){
+            ps.delete(productId);
+        }
+        else{
+            List<Integer> search = this.findProducts(brandid);
+            search.stream().forEach((item) -> {
+                ps.delete(item);
+            }); 
+        }
         return ""+brandid+":"+productId;
     }
     

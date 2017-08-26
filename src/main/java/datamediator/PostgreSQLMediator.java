@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -507,6 +508,39 @@ public class PostgreSQLMediator implements SqlMediator{
         return anyResults;
     }
     
+    @Override
+    public List<Integer> getUserAccess(boolean readonly, int resourceid){
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        
+        String query = "SELECT DISTINCT a.enduserid, a.accessid, ar.tablename, ar.localid"
+                + " FROM access a "
+                + " INNER JOIN accessResource ar " +
+                      " ON a.accessid = ar.id " +
+                      " AND ar.localid = "+ resourceid +" " +
+                      " AND ar.tablename like '"+accessTable+"' ";
+        if (!readonly) {
+            query += " AND a.readonly = false ";
+        }
+
+
+        try (Connection connection = this.connectionPool.getConnection()){
+            PreparedStatement stmt = connection.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            
+            List<Integer> listUser = new LinkedList<>();
+            while (rs.next()) {
+                listUser.add(rs.getInt("enduserid"));
+            }
+            return listUser;
+
+        } catch (Exception e) {
+            System.err.println("ERROR DURING HAS ACCESS:");
+            System.err.println(e);
+            System.err.println(query);
+        }
+        return Collections.<Integer>emptyList();
+    }
+    
     private SqlMediator createAccessResource(int localid){
         if (this.accesstablename.isEmpty()){
             String query = "INSERT INTO accessResource (tablename,localid)";
@@ -543,14 +577,15 @@ public class PostgreSQLMediator implements SqlMediator{
         return this;
     }
     
-    private SqlMediator removeAccessResource(int localid){
-        return this;
-    }
-    
     @Override
     public SqlMediator grantAccess(boolean readonly, List<Integer> listId){
         int currentuserid = SessionMediator.getCurrentUserId();
         return this.grantAccess(readonly, listId, Arrays.asList(currentuserid));
+    }
+    
+    @Override
+    public SqlMediator grantAccessAllUsers(boolean readonly, List<Integer> listId){
+        return this.grantAccess(readonly, listId, Arrays.asList(-1));
     }
     
     @Override
@@ -570,7 +605,7 @@ public class PostgreSQLMediator implements SqlMediator{
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
 
-                ResultSet rs = updateSql.executeQuery();
+                updateSql.executeQuery();
 
             } catch (Exception e) {
                 System.err.println(e);
@@ -614,6 +649,33 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator revokeAccessAllUsers(List<Integer> listId){
         return this.revokeAccess(listId,Arrays.asList());
+    }
+
+    @Override
+    public boolean hasAccessNoInitialized(int id) {
+        boolean anyResults = false;
+        String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
+        
+        String query = "SELECT DISTINCT a.enduserid, a.accessid, ar.tablename, ar.localid"
+                + " FROM access a "
+                + " INNER JOIN accessResource ar " +
+                      " ON a.accessid = ar.id " +
+                      " AND ar.localid = "+ id +" " +
+                      " AND ar.tablename like '"+accessTable+"' ";
+
+
+        try (Connection connection = this.connectionPool.getConnection()){
+            PreparedStatement stmt = connection.prepareStatement(query);
+            ResultSet rs = stmt.executeQuery();
+            
+            anyResults = rs.isBeforeFirst();
+
+        } catch (Exception e) {
+            System.err.println("ERROR DURING HAS ACCESS:");
+            System.err.println(e);
+            System.err.println(query);
+        }
+        return anyResults;
     }
    
 }

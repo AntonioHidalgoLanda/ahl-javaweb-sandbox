@@ -7,9 +7,12 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -25,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class IgotItService {
+public class IgotItService  implements SqlEntityMediator{
     
     BasicDataSource connectorPool = null;
     
@@ -35,6 +38,58 @@ public class IgotItService {
         } catch (SQLException | URISyntaxException ex) {
             System.err.println(ex);
         }
+    }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotit")
+                .addFindField("id")
+                .addFindField("publishdate")
+                .addFindField("enduserid")
+                .addFindField("visibility")
+                .addFindField("usercomment")
+                .addFindField("coordinates")
+                .addFindField("accessLevel")
+                .addFindField("rating");
+        return sm;
+    }
+
+    public SqlMediator getProductSqlMediator() {
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("igotitProduct")
+                .turnIdOff()
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
+                .addFindField("igotitId")
+                .addFindField("productId");
+        return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        if(!sm.hasAccessNoInitialized(entityId)){
+            sm.grantAccess(false, Arrays.asList(entityId));
+        }
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        SqlMediator sm = this.getSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
     public List<Map<String, Object>> find(int igotitId){
@@ -60,16 +115,7 @@ public class IgotItService {
            @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotit")
-                .addFindField("id")
-                .addFindField("publishdate")
-                .addFindField("enduserid")
-                .addFindField("visibility")
-                .addFindField("usercomment")
-                .addFindField("coordinates")
-                .addFindField("accessLevel")
-                .addFindField("rating");
+        SqlMediator sm = this.getSqlMediator();
         if (igotitId >= 0){
             sm.addFindParam("id", igotitId, 1);
         }
@@ -117,8 +163,7 @@ public class IgotItService {
             @RequestParam(value="rating", required=false, defaultValue="0") int rating,
            @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotit");
+        SqlMediator sm = this.getSqlMediator();
         if (igotitId >= 0){
             sm.addId(igotitId);
         }
@@ -141,7 +186,9 @@ public class IgotItService {
             sm.addUpsertParam("accessLevel", accessLevel);
         }
         sm.runUpsert();
-        return sm.getId();
+        int newId = (igotitId > 0)? igotitId : Integer.parseInt(sm.getId());
+        this.grantAccess(newId);
+        return ""+newId;
     }
     
     
@@ -153,23 +200,16 @@ public class IgotItService {
         this.deleteProduct(igotitId, -1);
         this.deleteTag(igotitId, "");
         
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotit")
-                .addFindParam("id", igotitId, 1);
-        sm.runDelete();
+        this.revokeAccess(igotitId);
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("id", igotitId, 1)
+            .runDelete();
         return ""+igotitId;
     }
     
     public List<Integer> getPhotos(int igotitId){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo")
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addFindField("id")
-                .addFindField("igotitId")
-                .addFindParam("igotitId", igotitId, 1)
-                .runFind();
-        List<Map<String, Object>> listObject = sm.getResultsFind();
+        PhotoService ps = new PhotoService();
+        List<Map<String, Object>> listObject = ps.find(-1, "", igotitId);
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
             listInt.add((Integer)obj.get("id"));
@@ -178,15 +218,9 @@ public class IgotItService {
     }
     
     public List<Integer> getProducts(int igotitId){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct")
-                .turnIdOff()
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addFindField("igotitId")
-                .addFindField("productId")
-                .addFindParam("igotitId", igotitId, 1)
-                .runFind();
+        SqlMediator sm = this.getProductSqlMediator();
+        sm.addFindParam("igotitId", igotitId, 1)
+          .runFind();
         List<Map<String, Object>> listObject = sm.getResultsFind();
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
@@ -196,16 +230,8 @@ public class IgotItService {
     }
     
     public List<String> getTags(int igotitId){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("tag")
-                .turnIdOff()
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addFindField("name")
-                .addFindField("igotitId")
-                .addFindParam("igotitId", igotitId, 1)
-                .runFind();
-        List<Map<String, Object>> listObject = sm.getResultsFind();
+        TagService ts = new TagService();
+        List<Map<String, Object>> listObject = ts.find("", igotitId);
         List<String> listStr = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
             listStr.add(obj.get("name").toString());
@@ -239,14 +265,8 @@ public class IgotItService {
            @RequestParam(value="id", required=true) int igotitId,
            @RequestParam(value="photoId", required=true) int photoId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo")
-                .setAccessId("igotitId")
-                .setAccessTable("igotit");
-        sm.addId(photoId)
-             .addUpsertParam("igotitId", igotitId);
-        sm.runUpsert();
-        return sm.getId();
+        PhotoService ps = new PhotoService();
+        return ps.upsert(photoId, "", igotitId);
     }
     
     @RequestMapping(value = "/igotit/product", method = RequestMethod.POST)
@@ -254,14 +274,11 @@ public class IgotItService {
            @RequestParam(value="id", required=true) int igotitId,
            @RequestParam(value="productId", required=true) int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct")
-                .turnIdOff()
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addUpsertParam("productId", productId)
-                .addUpsertParam("igotitId", igotitId);
-        sm.runUpsert();
+        SqlMediator sm = this.getProductSqlMediator();
+        sm.addUpsertParam("productId", productId)
+          .addUpsertParam("igotitId", igotitId)
+          .runUpsert();
+        // Product/Igotit depends on access on igotit, so there is nothing to do
         return sm.getId();
     }
     
@@ -270,15 +287,8 @@ public class IgotItService {
            @RequestParam(value="id", required=true) int igotitId,
            @RequestParam(value="tag", required=true) String tag
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("tag");
-        sm.addUpsertParam("name",tag)
-                .turnIdOff()
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addUpsertParam("igotitId", igotitId);
-        sm.runUpsert();
-        return sm.getId();
+        TagService ts = new TagService();
+        return ts.upsert(tag, igotitId);
     }
     
     @RequestMapping(value = "/igotit/photo", method = RequestMethod.DELETE)
@@ -291,9 +301,9 @@ public class IgotItService {
             ps.delete(photoId);
         }
         else {
-            List<Map<String, Object>> search = ps.find(-1, "", igotitId);
+            List<Integer> search = this.findPhotos(igotitId);
             search.stream().forEach((item) -> {
-                ps.delete((Integer)item.get("id"));
+                ps.delete(item);
             }); 
         }
         return ""+igotitId+":"+((photoId>0)?photoId:"all");
@@ -304,12 +314,8 @@ public class IgotItService {
            @RequestParam(value="id", required=true) int igotitId,
            @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotitProduct")
-                .turnIdOff()
-                .setAccessId("igotitId")
-                .setAccessTable("igotit")
-                .addFindParam("igotitId", igotitId, 1);
+        SqlMediator sm = this.getProductSqlMediator();
+        sm.addFindParam("igotitId", igotitId, 1);
         if (productId>0){
             sm.addFindParam("productId", productId, 1);
         }
@@ -327,9 +333,9 @@ public class IgotItService {
             ts.delete(tag,igotitId);
         }
         else {
-            List<Map<String, Object>> search = ts.find("", igotitId);
+            List<String> search = this.findTags(igotitId);
             search.stream().forEach((item) -> {
-                ts.delete(item.get("id").toString(),igotitId);
+                ts.delete(item,igotitId);
             }); 
         }
         return ""+igotitId+":"+((!tag.isEmpty())?tag:"all");

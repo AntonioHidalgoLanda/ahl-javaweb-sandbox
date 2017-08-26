@@ -26,6 +26,7 @@ public class EndUserServiceTests {
     
     public void smokeCreate(EndUserService eus, List<Integer> listId ){
         List<Map<String, Object>> find;
+        SessionMediator.setEmulationMode(1);
         for (int i =0; i< EndUserServiceTests.N_RECORDS; i++){
             String givenFederationId = EndUserServiceTests.STR_FEDERATION_ID_PREFIX+i;
             String givenProfileName = EndUserServiceTests.STR_PROFILE_NAME_PREFIX+i;
@@ -38,6 +39,7 @@ public class EndUserServiceTests {
             TestUtils.assertField(find, "profileName", givenProfileName);
             TestUtils.assertField(find, "recoveryEmail", givenRecoveryEmail);
             TestUtils.assertField(find, "avatarUrl", givenAvatarUrl);
+            SessionMediator.setEmulationMode(id+1);
         }
     }
     
@@ -45,12 +47,14 @@ public class EndUserServiceTests {
         List<Map<String, Object>> find;
         String strUpdate = "XXXXX";
         int id = listId.get(0);
+        SessionMediator.setEmulationMode(id);
         eus.upsert(id, "", "", strUpdate, "");
         eus.upsert(id, strUpdate, "", "", "");
         find = eus.find(id, "", "","", "",false);
         TestUtils.assertField(find, "recoveryEmail", strUpdate);
         TestUtils.assertField(find, "federationId", strUpdate);
         id = listId.get(1);
+        SessionMediator.setEmulationMode(id);
         eus.upsert(id, strUpdate, "", "", "");
         eus.upsert(id, "", "", strUpdate, "");
         find = eus.find(id, "", "","", "",false);

@@ -7,6 +7,8 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,7 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @author antonio
  */
 @RestController
-public class PhotoService {
+public class PhotoService  implements SqlEntityMediator{
     
     BasicDataSource connectorPool = null;
     
@@ -50,6 +52,40 @@ public class PhotoService {
         } catch (SQLException | URISyntaxException ex) {
             System.err.println(ex);
         }
+    }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("photo")
+                .setAccessTable("igotit")
+                .setAccessId("igotitId")
+                .addFindField("id")
+                .addFindField("localpath")
+                .addFindField("igotitId");
+        return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        // do nothing, access is managed in Igotiit Service
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        // do nothing; access is managed in Reseller Service
+        return this;
     }
     
     
@@ -118,13 +154,7 @@ public class PhotoService {
            @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo")
-                .setAccessTable("igotit")
-                .setAccessId("igotitId")
-                .addFindField("id")
-                .addFindField("localpath")
-                .addFindField("igotitId");
+        SqlMediator sm = this.getSqlMediator();
         if (photoID >= 0){
             sm.addFindParam("id", photoID, 1);
         }
@@ -144,10 +174,7 @@ public class PhotoService {
            @RequestParam(value="localpath", required=false, defaultValue="") String localpath,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo")
-                .setAccessTable("igotit")
-                .setAccessId("igotitId");
+        SqlMediator sm = this.getSqlMediator();
         if (photoID >= 0){
             sm.addId(photoID);
         }
@@ -158,6 +185,7 @@ public class PhotoService {
             sm.addUpsertParam("igotitId", igotitId);
         }
         sm.runUpsert();
+        this.grantAccess(photoID);
         return sm.getId();
     }
     
@@ -166,12 +194,11 @@ public class PhotoService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int photoID
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("photo")
-                .setAccessTable("igotit")
-                .setAccessId("igotitId")
-                .addFindParam("id", photoID, 1);
-        sm.runDelete();
+        
+        this.revokeAccess(photoID);
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("id", photoID, 1)
+          .runDelete();
         return ""+photoID;
     }
 }

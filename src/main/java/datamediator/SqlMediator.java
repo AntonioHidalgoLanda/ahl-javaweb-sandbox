@@ -12,7 +12,7 @@ import java.util.Map;
  *
  * @author antonio
  */
-public interface SqlMediator {
+public interface SqlMediator{
     public SqlMediator clear();
     public SqlMediator turnIdOff();
     public SqlMediator turnIdOn();
@@ -62,12 +62,17 @@ public interface SqlMediator {
      */
     public SqlMediator runDelete();
     public List<Map<String,Object>> getResultsFind();
+    
+    // Access
+    public boolean hasAccessNoInitialized(int id);
     public boolean hasFullAccess(int id);
     public boolean hasFullAccess(int resourceid, int userid);
     public boolean hasReadAccess(int id);
     public boolean hasReadAccess(int resourceid, int userid);
+    public List<Integer> getUserAccess(boolean readonly, int resourceid);
     public SqlMediator grantAccess(boolean readonly, List<Integer> listId);
     public SqlMediator grantAccess(boolean readonly, List<Integer> listReource, List<Integer> listUser);
+    public SqlMediator grantAccessAllUsers(boolean readonly, List<Integer> listReource);
     public SqlMediator revokeAccess(List<Integer> listId);
     public SqlMediator revokeAccess(List<Integer> listReource, List<Integer> listUser);
     public SqlMediator revokeAccessAllUsers(List<Integer> listId);
