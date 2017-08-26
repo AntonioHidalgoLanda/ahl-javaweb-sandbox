@@ -27,7 +27,7 @@ public class IgotItServiceTests {
     final static String STR_COORDINATES_PREFIX = "coordinates";
     final static int N_RATING = 4;
     final static int N_NO_ID = -1;
-    final static int N_ACCESSLEVEL = 2;     //0 (draft/me), 1 (friends), 2 (followers), 3 (public)
+    final static String N_ACCESSLEVEL = "1";     //0 (draft/me), 1 (friends), 3 (public)
     
     public void smokeCreate(IgotItService is, List<Integer> listId , int enduserid){
         List<Map<String, Object>> find;
@@ -46,18 +46,18 @@ public class IgotItServiceTests {
         List<Map<String, Object>> find;
         String strUpdate = "XXXXX";
         int id = listId.get(0);
-        is.upsert(id, -1, -1, strUpdate, "", -1, -1);
+        is.upsert(id, -1, -1, strUpdate, "", -1, "");
         
         find = is.find(id, false);
         TestUtils.assertField(find, "usercomment", strUpdate);
         id = listId.get(1);
-        is.upsert(id, -1, -1, strUpdate, "", -1, -1);
+        is.upsert(id, -1, -1, strUpdate, "", -1, "");
         find = is.find(id, false);
         Object pd= find.get(0).get("publishdate");
         System.out.println("Published Date ("+pd.getClass()+"): "+pd.toString());
         TestUtils.assertField(find, "usercomment", strUpdate);
         
-        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, strUpdate, "", -1, -1, false);
+        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, strUpdate, "", -1, "", false);
         TestUtils.assertMultiField(find, "recoveryEmail", 2);
         
     
@@ -65,12 +65,12 @@ public class IgotItServiceTests {
     
     public void smokeDelete(IgotItService is, List<Integer> listId){
         List<Map<String, Object>> find;
-        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, "", "", -1, -1, false);
+        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, "", "", -1, "", false);
         int currentSize = find.size();
         listId.stream().forEach((id) -> {
             is.delete(id);
         });
-        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, "", "", -1, -1, false);
+        find = is.find(IgotItServiceTests.N_NO_ID, -1, -1, "", "", -1, "", false);
         Assert.assertEquals("Check all the records have been deleted",
                 currentSize - listId.size(), find.size()); 
         

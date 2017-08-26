@@ -30,6 +30,9 @@ INSERT INTO accessResource (id, tablename, localid)
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( 4, 4, 'false');
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('enduser', 'id'), (SELECT MAX(id) FROM enduser)+1);
+
+
 -- I GOT ITs
 INSERT INTO igotit (  id,enduserid,coordinates,rating) VALUES ( 1,1,'test_coordinates1',1 );
 INSERT INTO accessResource (id, tablename, localid)
@@ -79,6 +82,7 @@ INSERT INTO accessResource (id, tablename, localid)
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( 4, 12, 'false');
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('igotit', 'id'), (SELECT MAX(id) FROM igotit)+1);
 
 --
 -- BRAND
@@ -96,6 +100,9 @@ INSERT INTO accessResource (id, tablename, localid)
     VALUES ( 14, 'brand', 8);
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( -1, 14, 'false');--all
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('brand', 'id'), (SELECT MAX(id) FROM brand)+1);
+
 
 --
 -- RESELLER
@@ -140,6 +147,8 @@ INSERT INTO access (enduserid, accessid, readonly)
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( -1, 19, 'true');
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('reseller', 'id'), (SELECT MAX(id) FROM reseller)+1);
+
 
 --
 -- TAG
@@ -159,6 +168,11 @@ INSERT INTO tag (name,igotitId) VALUES ( '#hastagging',3);
 -- Igotit Accessibility
 --
 INSERT INTO photo (id,localpath,igotitId) VALUES (1,'photos/coat-of-arms.png',3);
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('photo', 'id'), (SELECT MAX(id) FROM photo)+1);
+
+
+
 
 
 --
@@ -200,6 +214,9 @@ INSERT INTO accessResource (id, tablename, localid)
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( -1, 25, 'true');
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('product', 'id'), (SELECT MAX(id) FROM product)+1);
+
+
 --
 -- SHOPPING ONLINE LINK
 --
@@ -211,6 +228,10 @@ INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (5,'test_url
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (6,'test_url r1 p1 ', 5,3);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (7,'test_url r1 p1 ', 6,5);
 INSERT INTO shoppingOnlineLink (id,url,productId,resellerId) VALUES (8,'test_url r1 p1 ', 6,4);
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('shoppingOnlineLink', 'id'), (SELECT MAX(id) FROM shoppingOnlineLink)+1);
+
+
 
 --
 -- STORE
@@ -240,6 +261,11 @@ INSERT INTO access (enduserid, accessid, readonly)
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( -1, 28, 'true');
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('store', 'id'), (SELECT MAX(id) FROM store)+1);
+
+
+
+
 
 
 --
@@ -266,3 +292,11 @@ INSERT INTO igotitProduct (igotitId ,productId) VALUES (3, 2);
 --
 INSERT INTO friend (enduserid,friendid,relationship) VALUES (1,2,0 );
 INSERT INTO friend (enduserid,friendid,relationship) VALUES (1,3,1 );
+
+
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('accessResource', 'id'), (SELECT MAX(id) FROM accessResource)+1);
+
+
+
+

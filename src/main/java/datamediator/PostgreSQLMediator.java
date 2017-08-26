@@ -272,15 +272,18 @@ public class PostgreSQLMediator implements SqlMediator{
                         this.addUpdateParameter(listParams, fieldname, updateSql);
                     }
 
-                    ResultSet rs = updateSql.executeQuery();
                     if (this.buseId){
+                        ResultSet rs = updateSql.executeQuery();
                         rs.next();
                         nNewId = rs.getInt(1);
                         this.createAccessResource(nNewId);
                     }
+                    updateSql.executeUpdate();
 
                 } catch (Exception e) {
+                    System.err.println("ERROR IN INSERT");
                     System.err.println(e);
+                    System.err.println(this.lastQuery);
                 }
             }
             this.nId = nNewId;
@@ -446,7 +449,7 @@ public class PostgreSQLMediator implements SqlMediator{
     private String accessibilityFindJoin() {
         int currentuserid = SessionMediator.getCurrentUserId();
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
-        String strJoin = "INNER JOIN accessResource ar " +
+        String strJoin = " INNER JOIN accessResource ar " +
                   " ON ar.localid = "+this.alias+"."+this.accessIdColumn+" " +
                   " AND ar.tablename like '"+accessTable+"' " +
                 "INNER JOIN access a " +
@@ -544,15 +547,17 @@ public class PostgreSQLMediator implements SqlMediator{
     private SqlMediator createAccessResource(int localid){
         if (this.accesstablename.isEmpty()){
             String query = "INSERT INTO accessResource (tablename,localid)";
-            query += " VALUES ( "+this.tablename+", "+localid+") " ;
+            query += " VALUES ( '"+this.tablename+"', "+localid+") " ;
 
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
 
-                updateSql.executeQuery();
+                updateSql.executeUpdate();
 
             } catch (Exception e) {
+                System.err.println("ERROR CREATING NEW ACCESS RESOURCE");
                 System.err.println(e);
+                System.err.println(query);
             }
         }    
         return this;
@@ -568,7 +573,7 @@ public class PostgreSQLMediator implements SqlMediator{
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
 
-                updateSql.executeQuery();
+                updateSql.executeUpdate();
 
             } catch (Exception e) {
                 System.err.println(e);
@@ -600,15 +605,19 @@ public class PostgreSQLMediator implements SqlMediator{
                 " FROM accessResource ar, enduser u " +
                 " WHERE ar.tablename Like '" + accessTable + "'"+
                    " AND ar.localid IN (" + this.listToCsvString(listResource) +")"+
-                   " AND ur.id IN (" + this.listToCsvString(listUserID) +")";
+                   " AND u.id IN (" + this.listToCsvString(listUserID) +")";
 
             try (Connection connection = this.connectionPool.getConnection()){
                 PreparedStatement updateSql = connection.prepareStatement(query);
 
-                updateSql.executeQuery();
+                updateSql.executeUpdate();
 
             } catch (Exception e) {
+                System.err.println("ERROR GRANTING ACCESS");
                 System.err.println(e);
+                System.err.println(query);
+                System.err.println("resources: "+Arrays.toString(listResource.toArray()));
+                System.err.println("Users: "+Arrays.toString(listUserID.toArray()));
             }
                 
         return this;
@@ -625,14 +634,16 @@ public class PostgreSQLMediator implements SqlMediator{
     @Override
     public SqlMediator revokeAccess(List<Integer> listResource, List<Integer> listUser) {
         String accessTable = (this.accesstablename.isEmpty())?this.tablename:this.accesstablename;
-        listUser.add(-1);
+        List<Integer> lusers = new ArrayList<>(listUser.size()+1);
+        lusers.addAll(listUser);
+        lusers.add(-1);
         String query =
                 "DELETE FROM access a " +
                 " USING accessResource ar " +
                 " WHERE a.accessid = ar.id " +
                     " AND ar.tablename Like '" + accessTable + "'";
-        if (listUser.size() == 1){
-           query += " AND a.enduserid IN (" + this.listToCsvString(listUser) + ") ";
+        if (lusers.size() == 1){
+           query += " AND a.enduserid IN (" + this.listToCsvString(lusers) + ") ";
         }
            query += " AND ar.localid IN (" +this.listToCsvString(listResource) + ")";
                 

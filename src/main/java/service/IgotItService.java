@@ -29,6 +29,11 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class IgotItService  implements SqlEntityMediator{
+    public enum AccessLevel{
+        DRAFT,
+        FRIEND,
+        PUBLIC
+    }
     
     BasicDataSource connectorPool = null;
     
@@ -83,25 +88,52 @@ public class IgotItService  implements SqlEntityMediator{
     @Override
     public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
         SqlMediator sm = this.getSqlMediator();
-        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        sm.revokeAccessAllUsers(listUsers);
         return this;
     }
 
     @Override
     public SqlEntityMediator revokeAccess(int entityId) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        SqlMediator sm = this.getSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        return this;
+    }
+    
+    public static AccessLevel accessLevelParse(String level){
+        switch (level.toUpperCase()){
+            case "PUBLIC":
+            case "0":
+                return AccessLevel.PUBLIC;
+            case "FRIEND":
+            case "1":
+                return AccessLevel.FRIEND;
+            default:
+                return AccessLevel.DRAFT;
+        }
+        
+    }
+    
+    public static int accessLevelToSql(AccessLevel level){
+        switch (level){
+            case FRIEND:
+                return 0;
+            case PUBLIC:
+                return 1;
+            default:
+                return -1;
+        }
     }
     
     public List<Map<String, Object>> find(int igotitId){
-        return this.find(igotitId, -1, -1, "", "", -1, -1, true);
+        return this.find(igotitId, -1, -1, "", "", -1, "", true);
     }
     
     public List<Map<String, Object>> find(int igotitId, boolean bextended){
-        return this.find(igotitId, -1, -1, "", "", -1, -1, bextended);
+        return this.find(igotitId, -1, -1, "", "", -1, "", bextended);
     }
     
     public List<Map<String, Object>> findEndusers(int enduserid, boolean bextended){
-        return this.find(-1, enduserid, -1, "", "", -1, -1, bextended);
+        return this.find(-1, enduserid, -1, "", "", -1, "", bextended);
     }
     
     @RequestMapping(value = "/igotits", method = RequestMethod.GET)
@@ -112,7 +144,7 @@ public class IgotItService  implements SqlEntityMediator{
            @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
            @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
            @RequestParam(value="rating", required=false, defaultValue="-1") int rating,
-           @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel,
+           @RequestParam(value="accessLevel", required=false, defaultValue="") String accessLevel,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
         SqlMediator sm = this.getSqlMediator();
@@ -134,8 +166,12 @@ public class IgotItService  implements SqlEntityMediator{
         if (rating > 0){
             sm.addFindParam("rating", rating, 1);
         }
-        if (accessLevel > 0){
-            sm.addFindParam("accessLevel", accessLevel, 1);
+        if (!accessLevel.isEmpty()){
+            sm.addFindParam(
+                    "accessLevel",
+                    IgotItService.accessLevelToSql(
+                            IgotItService.accessLevelParse(accessLevel)),
+                    1);
         }
         sm.runFind();
         List<Map<String, Object>> result = sm.getResultsFind();
@@ -150,7 +186,6 @@ public class IgotItService  implements SqlEntityMediator{
         return result;
     }
     
-    
     // Date e.g. 2011-12-03T10:15:30+01:00'
     // we strore UCD
     @RequestMapping(value = "/igotit", method = RequestMethod.POST)
@@ -161,7 +196,7 @@ public class IgotItService  implements SqlEntityMediator{
             @RequestParam(value="usercomment", required=false, defaultValue="") String usercomment,
             @RequestParam(value="coordinates", required=false, defaultValue="") String coordinates,
             @RequestParam(value="rating", required=false, defaultValue="0") int rating,
-           @RequestParam(value="accessLevel", required=false, defaultValue="-1") int accessLevel
+           @RequestParam(value="accessLevel", required=false, defaultValue="") String strAccessLevel
     ){
         SqlMediator sm = this.getSqlMediator();
         if (igotitId >= 0){
@@ -182,12 +217,29 @@ public class IgotItService  implements SqlEntityMediator{
         if (rating > 0){
             sm.addUpsertParam("rating", rating);
         }
-        if (rating > 0){
-            sm.addUpsertParam("accessLevel", accessLevel);
+        AccessLevel accessLevel = IgotItService.accessLevelParse(strAccessLevel);
+        if (!strAccessLevel.isEmpty()){
+            sm.addUpsertParam("accessLevel", IgotItService.accessLevelToSql(accessLevel));
         }
         sm.runUpsert();
         int newId = (igotitId > 0)? igotitId : Integer.parseInt(sm.getId());
-        this.grantAccess(newId);
+        
+        if (!strAccessLevel.isEmpty() || igotitId <= 0){
+            this.revokeAccess(newId);
+            this.grantAccess(newId);
+            List<Integer> listUser;
+        
+            switch (accessLevel) {
+                case PUBLIC:
+                    sm.grantAccessAllUsers(true, Arrays.asList(newId));
+                    break;
+                case FRIEND:
+                    EndUserService es = new EndUserService();
+                    listUser = es.getFriends(enduserid, -1, EndUserService.RelationshipLevel.FRIEND);
+                    sm.grantAccess(true, Arrays.asList(newId), listUser);
+            }
+        }
+        
         return ""+newId;
     }
     

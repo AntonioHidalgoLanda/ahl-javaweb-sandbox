@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class EndUserService  implements SqlEntityMediator{
     public enum RelationshipLevel{
         NONE,
-        FOLLOWER,
         FRIEND
     }
     
@@ -78,8 +77,8 @@ public class EndUserService  implements SqlEntityMediator{
     public SqlEntityMediator grantAccess(int entityId) {
         SqlMediator sm = this.getSqlMediator();
         if(!sm.hasAccessNoInitialized(entityId)){
-            sm.grantAccessAllUsers(true, Arrays.asList(entityId));
             sm.grantAccess(false, Arrays.asList(entityId));
+            sm.grantAccessAllUsers(true, Arrays.asList(entityId));
         }
         return this;
     }
@@ -123,18 +122,15 @@ public class EndUserService  implements SqlEntityMediator{
             sm.addFindParam("avatarUrl", avatarUrl, 1);
         }
         sm.runFind();
+System.out.println(((PostgreSQLMediator)sm).getLastQuery());
         List<Map<String, Object>> result = sm.getResultsFind();
         if(bextended){
             result.stream().forEach((obj) -> {
                 int objId = (Integer)obj.get("id");
                 obj.put("igotitList", this.findIgotits(objId));
-                RelationshipLevel level = RelationshipLevel.FOLLOWER;
+                RelationshipLevel level = RelationshipLevel.FRIEND;
                 obj.put(
                         level.toString()+"List",
-                        this.getFriends(objId,-1,level)
-                );
-                level = RelationshipLevel.FRIEND;
-                obj.put(level.toString()+"List",
                         this.getFriends(objId,-1,level)
                 );
             });
@@ -185,9 +181,19 @@ public class EndUserService  implements SqlEntityMediator{
         return ""+enduserID;
     }
     
-    public List<Integer> getIgotits(int enduserid){
+    public List<Integer> getIgotits(int enduserid, IgotItService.AccessLevel maxAccesslevel){
         IgotItService is = new IgotItService();
-        List<Map<String, Object>> listObject = is.find(-1, enduserid, -1, "", "", -1, -1, false);
+        List<Map<String, Object>> listObject = new LinkedList<>();
+        switch (maxAccesslevel){
+            case FRIEND:
+                listObject = is.find(-1, enduserid, -1, "", "", -1, "FRIEND", false);
+            case PUBLIC:
+                listObject.addAll(is.find(-1, enduserid, -1, "", "", -1, "PUBLIC", false));
+                break;
+            default:
+                listObject = is.find(-1, enduserid, -1, "", "", -1, "", false);
+        }
+        
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
             listInt.add((Integer)obj.get("id"));
@@ -199,7 +205,7 @@ public class EndUserService  implements SqlEntityMediator{
     public @ResponseBody List<Integer> findIgotits(
             @RequestParam(value="id", required=true) int enduserid
     ){
-        return this.getIgotits(enduserid);
+        return this.getIgotits(enduserid,IgotItService.AccessLevel.DRAFT);
     }
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.POST)
@@ -208,7 +214,7 @@ public class EndUserService  implements SqlEntityMediator{
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
         IgotItService is = new IgotItService();
-        return is.upsert(igotitId, enduserid, -1, "", "", -1, -1);
+        return is.upsert(igotitId, enduserid, -1, "", "", -1, "");
     }
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
@@ -231,11 +237,8 @@ public class EndUserService  implements SqlEntityMediator{
     
     public static RelationshipLevel relationshipLevelParse(String level){
         switch (level.toUpperCase()){
-            case "FOLLOWER":
-            case "0":
-                return RelationshipLevel.FOLLOWER;
             case "FRIEND":
-            case "1":
+            case "0":
                 return RelationshipLevel.FRIEND;
             default:
                 return RelationshipLevel.NONE;
@@ -245,10 +248,8 @@ public class EndUserService  implements SqlEntityMediator{
     
     public static int relationshipLevelToSql(RelationshipLevel level){
         switch (level){
-            case FOLLOWER:
-                return 0;
             case FRIEND:
-                return 1;
+                return 0;
             default:
                 return -1;
         }
@@ -307,7 +308,17 @@ public class EndUserService  implements SqlEntityMediator{
             );
         }
         sm.runUpsert();
-        //sm.grantAccess(false, Arrays.asList(enduserid,friendid));
+        if (enduserid <= 0 || !sLevel.isEmpty()){
+            IgotItService.AccessLevel al = IgotItService.AccessLevel.PUBLIC;
+            if (rLevel == RelationshipLevel.FRIEND){
+                al = IgotItService.AccessLevel.FRIEND;
+            }
+            IgotItService is = new IgotItService();
+            SqlMediator issm = is.getSqlMediator();
+            List<Integer> listIgotits = this.getIgotits(enduserid,al);//
+            issm.grantAccess(true, listIgotits, Arrays.asList(friendid));
+            
+        }
         return sm.getId();
     }
     
