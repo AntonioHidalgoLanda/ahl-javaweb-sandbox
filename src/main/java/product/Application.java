@@ -13,9 +13,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,19 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 @EnableOAuth2Sso
 @RestController
 public class Application {
-
-    @RequestMapping("/user")
-    public String user() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof AnonymousAuthenticationToken)
-                && authentication.isAuthenticated()) {
-            String currentUserName = authentication.getName();
-            // TODO check if user is in the system (enduser.federationid=currentUserName)
-            // If not, create
-            // Also, need to check who is authorizating
-            return currentUserName;
-        }
-        return "";
+    
+    @RequestMapping("/signin")
+    public String signin() {
+        SessionMediator.validateSessionUser();
+        return SessionMediator.sessionToString();
     }
   
     public static void main(String[] args) {

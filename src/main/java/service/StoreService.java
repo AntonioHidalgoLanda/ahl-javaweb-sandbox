@@ -7,9 +7,12 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -26,7 +29,7 @@ import product.CountryHelper;
  * @author antonio
  */
 @RestController
-public class StoreService {
+public class StoreService  implements SqlEntityMediator{
     
     BasicDataSource connectorPool = null;
     
@@ -36,6 +39,65 @@ public class StoreService {
         } catch (SQLException | URISyntaxException ex) {
             System.err.println(ex);
         }
+    }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("store")
+                .addFindField("id")
+                .addFindField("resellerId")
+                .addFindField("numberStreet")
+                .addFindField("address1")
+                .addFindField("address2")
+                .addFindField("city")
+                .addFindField("stateProvince")
+                .addFindField("country")
+                .addFindField("postCode")
+                .addFindField("contactEmail")
+                .addFindField("contactPhone")
+                .addFindField("contactName");
+        return sm;
+    }
+
+    public SqlMediator getStoreProductSqlMediator() {
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("storeProduct")
+                .turnIdOff()
+                .setAccessId("storeId")
+                .setAccessTable("store")
+                .addFindField("productId")
+                .addFindField("storeId");
+        return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        SqlMediator sm = this.getSqlMediator();
+        sm.grantAccess(true, Arrays.asList(entityId), listUsers);
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        if(!sm.hasAccessNoInitialized(entityId)){
+            sm.grantAccessAllUsers(true, Arrays.asList(entityId));
+            sm.grantAccess(false, Arrays.asList(entityId));
+        }
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        return this;
     }
     
     @RequestMapping(value = "/stores", method = RequestMethod.GET)
@@ -53,20 +115,7 @@ public class StoreService {
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("store")
-                .addFindField("id")
-                .addFindField("resellerId")
-                .addFindField("numberStreet")
-                .addFindField("address1")
-                .addFindField("address2")
-                .addFindField("city")
-                .addFindField("stateProvince")
-                .addFindField("country")
-                .addFindField("postCode")
-                .addFindField("contactEmail")
-                .addFindField("contactPhone")
-                .addFindField("contactName");
+        SqlMediator sm = this.getSqlMediator();
         if (storeID >= 0){
             sm.addFindParam("id", storeID, 1);
         }
@@ -126,8 +175,7 @@ public class StoreService {
            @RequestParam(value="contactPhone", required=false, defaultValue="") String contactPhone,
            @RequestParam(value="contactName", required=false, defaultValue="") String contactName
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("store");
+        SqlMediator sm = this.getSqlMediator();
         if (storeID >= 0){
             sm.addId(storeID);
         }
@@ -165,6 +213,17 @@ public class StoreService {
             sm.addUpsertParam("contactName", contactName);
         }
         sm.runUpsert();
+        int newId = (storeID>0)?storeID:Integer.parseInt(sm.getId());
+        this.grantAccess(newId);
+        if (resellerId>0){
+            sm.revokeAccessAllUsers(Arrays.asList(newId));
+            ResellerService rs = new ResellerService();
+            SqlMediator rssm = rs.getSqlMediator();
+            List<Integer> listUsers = rssm.getUserAccess(true, resellerId);
+            this.grantAccess(newId, listUsers);
+            listUsers = rssm.getUserAccess(false, resellerId);
+            this.grantAccess(newId, listUsers);
+        }
         return sm.getId();
     }
     
@@ -172,20 +231,18 @@ public class StoreService {
     public @ResponseBody String delete(
             @RequestParam(value="id", required=true) int storeId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("store")
-                .addFindParam("id", storeId, 1);
-        sm.runDelete();
+        this.deleteProduct(storeId, -1);
+        this.revokeAccess(storeId);
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("id", storeId, 1)
+                .runDelete();
         return ""+storeId;
     }
     
     public List<Integer> getProducts(int storeId){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("storeProduct")
-                .addFindField("productId")
-                .addFindField("storeId")
-                .addFindParam("storeId", storeId, 1)
-                .runFind();
+        SqlMediator sm = this.getStoreProductSqlMediator();
+        sm.addFindParam("storeId", storeId, 1)
+          .runFind();
         List<Map<String, Object>> listObject = sm.getResultsFind();
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
@@ -206,24 +263,30 @@ public class StoreService {
            @RequestParam(value="id", required=true) int storeId,
            @RequestParam(value="productId", required=true) int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("storeProduct");
+        SqlMediator sm = this.getStoreProductSqlMediator();
         sm.addUpsertParam("productId", productId)
-          .addUpsertParam("storeId", storeId);
-        sm.runUpsert();
+          .addUpsertParam("storeId", storeId)
+          .runUpsert();
+        // Do not need to revoke anything
         return sm.getId();
     }
     
     @RequestMapping(value = "/store/product", method = RequestMethod.DELETE)
     public @ResponseBody String deleteProduct(
            @RequestParam(value="id", required=true) int storeId,
-           @RequestParam(value="productId", required=true) int productId
+           @RequestParam(value="productId", required=false, defaultValue="-1") int productId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("storeProduct")
-                .addFindParam("storeId", storeId, 1)
-                .addFindParam("productId", productId, 1);
-        sm.runDelete();
+        // Do not need to revoke anything
+        ProductService ps = new ProductService();
+        if (productId > 0){
+            ps.delete(productId);
+        }
+        else{
+            List<Integer> search = this.findProducts(storeId);
+            search.stream().forEach((item) -> {
+                ps.delete(item);
+            }); 
+        }
         return ""+storeId+":"+productId;
     }
 }

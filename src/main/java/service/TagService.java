@@ -7,6 +7,8 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class TagService {
+public class TagService  implements SqlEntityMediator{
     
     BasicDataSource connectorPool = null;
     
@@ -35,16 +37,50 @@ public class TagService {
             System.err.println(ex);
         }
     }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("tag")
+                .turnIdOff()
+                .setAccessId("igotitId")
+                .setAccessTable("igotit")
+                .addFindField("name")
+                .addFindField("igotitId");
+        return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        // Tags use the id of the parent (igotit) hence we do not need to create
+        // new access rights
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        // Tags use the id of the parent (igotit) hence we do not need to create
+        // new access rights
+        return this;
+    }
     
     @RequestMapping(value = "/tags", method = RequestMethod.GET)
     public @ResponseBody List<Map<String, Object>> find(
             @RequestParam(value="id", required=false, defaultValue="") String name,
            @RequestParam(value="igotitId", required=false, defaultValue="0") int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("tag")
-                .addFindField("name")
-                .addFindField("igotitId");
+        SqlMediator sm = this.getSqlMediator();
+        
         if (!name.isEmpty()){
             sm.addFindParam("name", name, 1);
         }
@@ -60,11 +96,11 @@ public class TagService {
             @RequestParam(value="name", required=true) String name,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("tag")
-                .addId(name)
-                .addUpsertParam("igotitId", igotitId);
-        sm.runUpsert();
+        SqlMediator sm = this.getSqlMediator();
+        sm.addUpsertParam("name",name)
+          .addUpsertParam("igotitId", igotitId)
+          .runUpsert();
+        this.grantAccess(igotitId);
         return sm.getId();
     }
     
@@ -74,11 +110,11 @@ public class TagService {
             @RequestParam(value="name", required=true) String name,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("name")
-                .addFindParam("name", name, 1)
-                .addFindParam("igotitId", igotitId, 1);
-        sm.runDelete();
+        this.revokeAccess(igotitId);
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("name", name, 1)
+          .addFindParam("igotitId", igotitId, 1)
+          .runDelete();
         return ""+name+":"+igotitId;
     }
     
