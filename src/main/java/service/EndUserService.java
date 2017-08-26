@@ -7,9 +7,12 @@ package service;
 
 import datamediator.DataSourceSingleton;
 import datamediator.PostgreSQLMediator;
+import datamediator.SqlEntityMediator;
+import datamediator.SqlMediator;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -25,21 +28,71 @@ import org.springframework.web.bind.annotation.RestController;
  * @author antonio
  */
 @RestController
-public class EndUserService {
+public class EndUserService  implements SqlEntityMediator{
     public enum RelationshipLevel{
         NONE,
-        FOLLOWER,
         FRIEND
     }
     
     BasicDataSource connectorPool = null;
     
-    EndUserService(){
+    public EndUserService(){
         try {
             this.connectorPool = DataSourceSingleton.getConnectionPool();
         } catch (SQLException | URISyntaxException ex) {
             System.err.println(ex);
         }
+    }
+
+    @Override
+    public SqlMediator getSqlMediator() {
+    PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
+        sm.setTable("enduser")
+                .addFindField("id")
+                .addFindField("federationId")
+                .addFindField("profileName")
+                .addFindField("recoveryEmail")
+                .addFindField("avatarUrl");
+        return sm;
+    }
+
+    private SqlMediator getFriendSqlMediator() {
+        SqlMediator sm = new PostgreSQLMediator(this.connectorPool);
+            sm.clear()
+                    .turnIdOff()
+                    .setTable("friend")
+                    .setAccessId("enduserid")
+                    .setAccessTable("enduser")
+                    .addFindField("friendid")
+                    .addFindField("enduserid");
+            return sm;
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator grantAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        if(!sm.hasAccessNoInitialized(entityId)){
+            sm.grantAccess(false, Arrays.asList(entityId));
+            sm.grantAccessAllUsers(true, Arrays.asList(entityId));
+        }
+        return this;
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId, List<Integer> listUsers) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SqlEntityMediator revokeAccess(int entityId) {
+        SqlMediator sm = this.getSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(entityId));
+        return this;
     }
    
     @RequestMapping(value = "/endusers", method = RequestMethod.GET)
@@ -51,13 +104,8 @@ public class EndUserService {
            @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl,
            @RequestParam(value="extended", required=false, defaultValue="true") boolean bextended
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("enduser")
-                .addFindField("id")
-                .addFindField("federationId")
-                .addFindField("profileName")
-                .addFindField("recoveryEmail")
-                .addFindField("avatarUrl");
+        SqlMediator sm = this.getSqlMediator();
+        
         if (enduserID >= 0){
             sm.addFindParam("id", enduserID, 1);
         }
@@ -79,13 +127,9 @@ public class EndUserService {
             result.stream().forEach((obj) -> {
                 int objId = (Integer)obj.get("id");
                 obj.put("igotitList", this.findIgotits(objId));
-                RelationshipLevel level = RelationshipLevel.FOLLOWER;
+                RelationshipLevel level = RelationshipLevel.FRIEND;
                 obj.put(
                         level.toString()+"List",
-                        this.getFriends(objId,-1,level)
-                );
-                level = RelationshipLevel.FRIEND;
-                obj.put(level.toString()+"List",
                         this.getFriends(objId,-1,level)
                 );
             });
@@ -101,8 +145,7 @@ public class EndUserService {
            @RequestParam(value="recoveryEmail", required=false, defaultValue="") String recoveryEmail,
            @RequestParam(value="avatarUrl", required=false, defaultValue="") String avatarUrl
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("enduser");
+        SqlMediator sm = this.getSqlMediator();
         if (enduserID >= 0){
             sm.addId(enduserID);
         }
@@ -119,6 +162,8 @@ public class EndUserService {
             sm.addUpsertParam("avatarUrl", avatarUrl);
         }
         sm.runUpsert();
+        int newId = (enduserID>0)?enduserID:Integer.parseInt(sm.getId());
+        this.grantAccess(newId);
         return sm.getId();
     }
     
@@ -127,22 +172,27 @@ public class EndUserService {
             @RequestParam(value="id", required=true) int enduserID
     ){
         this.deleteIgotit(enduserID, -1);
+        this.revokeAccess(enduserID);
         
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("enduser")
-                .addFindParam("id", enduserID, 1);
-        sm.runDelete();
+        SqlMediator sm = this.getSqlMediator();
+        sm.addFindParam("id", enduserID, 1)
+          .runDelete();
         return ""+enduserID;
     }
     
-    public List<Integer> getIgotits(int enduserid){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotit")
-                .addFindField("id")
-                .addFindField("enduserid")
-                .addFindParam("enduserid", enduserid, 1)
-                .runFind();
-        List<Map<String, Object>> listObject = sm.getResultsFind();
+    public List<Integer> getIgotits(int enduserid, IgotItService.AccessLevel maxAccesslevel){
+        IgotItService is = new IgotItService();
+        List<Map<String, Object>> listObject = new LinkedList<>();
+        switch (maxAccesslevel){
+            case FRIEND:
+                listObject = is.find(-1, enduserid, -1, "", "", -1, "FRIEND", false);
+            case PUBLIC:
+                listObject.addAll(is.find(-1, enduserid, -1, "", "", -1, "PUBLIC", false));
+                break;
+            default:
+                listObject = is.find(-1, enduserid, -1, "", "", -1, "", false);
+        }
+        
         List<Integer> listInt = new ArrayList<>(listObject.size());
         listObject.stream().forEach((obj) -> {
             listInt.add((Integer)obj.get("id"));
@@ -154,7 +204,7 @@ public class EndUserService {
     public @ResponseBody List<Integer> findIgotits(
             @RequestParam(value="id", required=true) int enduserid
     ){
-        return this.getIgotits(enduserid);
+        return this.getIgotits(enduserid,IgotItService.AccessLevel.DRAFT);
     }
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.POST)
@@ -162,12 +212,8 @@ public class EndUserService {
            @RequestParam(value="id", required=true) int enduserid,
            @RequestParam(value="igotitId", required=true) int igotitId
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("igotit");
-        sm.addId(igotitId)
-             .addUpsertParam("enduserid", enduserid);
-        sm.runUpsert();
-        return sm.getId();
+        IgotItService is = new IgotItService();
+        return is.upsert(igotitId, enduserid, -1, "", "", -1, "");
     }
     
     @RequestMapping(value = "/enduser/igotit", method = RequestMethod.DELETE)
@@ -180,9 +226,9 @@ public class EndUserService {
             is.delete(igotitId);
         }
         else{
-            List<Map<String, Object>> search = is.findEndusers(enduserid,false);
+            List<Integer> search = this.findIgotits(enduserid);
             search.stream().forEach((item) -> {
-                is.delete((Integer)item.get("id"));
+                is.delete(item);
             }); 
         }
         return ""+enduserid+":"+((igotitId>0)?igotitId:"all");
@@ -190,11 +236,8 @@ public class EndUserService {
     
     public static RelationshipLevel relationshipLevelParse(String level){
         switch (level.toUpperCase()){
-            case "FOLLOWER":
-            case "0":
-                return RelationshipLevel.FOLLOWER;
             case "FRIEND":
-            case "1":
+            case "0":
                 return RelationshipLevel.FRIEND;
             default:
                 return RelationshipLevel.NONE;
@@ -204,10 +247,8 @@ public class EndUserService {
     
     public static int relationshipLevelToSql(RelationshipLevel level){
         switch (level){
-            case FOLLOWER:
-                return 0;
             case FRIEND:
-                return 1;
+                return 0;
             default:
                 return -1;
         }
@@ -219,17 +260,13 @@ public class EndUserService {
             RelationshipLevel level
     ){
         List<Integer> listInt = new LinkedList<>();
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
         int nLevel = EndUserService.relationshipLevelToSql(level);
         for (int i = 0; i <= nLevel; i++){
-            sm.clear()
-                    .setTable("friend")
-                    .addFindField("friendid")
-                    .addFindField("enduserid")
-                    .addFindParam("enduserid", enduserid, 1)
-                    .addFindParam("relationship", i, 1);
+            SqlMediator sm = this.getFriendSqlMediator();
+            sm.addFindParam("enduserid", enduserid, 1)
+              .addFindParam("relationship", i, 1);
             if (friendid>0){
-                sm.addFindParam("friendid", friendid, 1);
+              sm.addFindParam("friendid", friendid, 1);
             }
             sm.runFind();
             List<Map<String, Object>> listObject = sm.getResultsFind();
@@ -259,8 +296,7 @@ public class EndUserService {
            @RequestParam(value="relationship", required=false, defaultValue="NONE") String sLevel
     ){
         RelationshipLevel rLevel = relationshipLevelParse(sLevel);
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("friend");
+        SqlMediator sm = this.getFriendSqlMediator();
         sm.addUpsertParam("enduserid", enduserid)
           .addUpsertParam("friendid", friendid);
         // note that default in INSERTS will be FRIEND
@@ -271,6 +307,17 @@ public class EndUserService {
             );
         }
         sm.runUpsert();
+        if (enduserid <= 0 || !sLevel.isEmpty()){
+            IgotItService.AccessLevel al = IgotItService.AccessLevel.PUBLIC;
+            if (rLevel == RelationshipLevel.FRIEND){
+                al = IgotItService.AccessLevel.FRIEND;
+            }
+            IgotItService is = new IgotItService();
+            SqlMediator issm = is.getSqlMediator();
+            List<Integer> listIgotits = this.getIgotits(enduserid,al);//
+            issm.grantAccess(true, listIgotits, Arrays.asList(friendid));
+            
+        }
         return sm.getId();
     }
     
@@ -279,9 +326,14 @@ public class EndUserService {
            @RequestParam(value="id",  required=true) int enduserid,
            @RequestParam(value="friendid", required=false, defaultValue="-1") int friendid
     ){
-        PostgreSQLMediator sm = new PostgreSQLMediator(this.connectorPool);
-        sm.setTable("friend")
-                .addFindParam("enduserid", enduserid, 1);
+        /*
+        SqlMediator smf = this.getSqlMediator();
+        List<Integer> listIgotitID = this.findIgotits(enduserid);
+        smf.revokeAccess(listIgotitID, Arrays.asList(friendid));
+        */
+        SqlMediator sm = this.getFriendSqlMediator();
+        sm.revokeAccessAllUsers(Arrays.asList(enduserid));
+        sm.addFindParam("enduserid", enduserid, 1);
         if (friendid>0){
             sm.addFindParam("friendid", friendid, 1);
         }

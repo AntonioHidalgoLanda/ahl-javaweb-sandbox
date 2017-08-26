@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import product.SessionMediator;
 import utils.TestUtils;
 /**
  *
@@ -25,6 +26,7 @@ public class EndUserServiceTests {
     
     public void smokeCreate(EndUserService eus, List<Integer> listId ){
         List<Map<String, Object>> find;
+        SessionMediator.setEmulationMode(6);
         for (int i =0; i< EndUserServiceTests.N_RECORDS; i++){
             String givenFederationId = EndUserServiceTests.STR_FEDERATION_ID_PREFIX+i;
             String givenProfileName = EndUserServiceTests.STR_PROFILE_NAME_PREFIX+i;
@@ -37,6 +39,7 @@ public class EndUserServiceTests {
             TestUtils.assertField(find, "profileName", givenProfileName);
             TestUtils.assertField(find, "recoveryEmail", givenRecoveryEmail);
             TestUtils.assertField(find, "avatarUrl", givenAvatarUrl);
+            SessionMediator.setEmulationMode(id+1);
         }
     }
     
@@ -44,12 +47,14 @@ public class EndUserServiceTests {
         List<Map<String, Object>> find;
         String strUpdate = "XXXXX";
         int id = listId.get(0);
+        SessionMediator.setEmulationMode(id);
         eus.upsert(id, "", "", strUpdate, "");
         eus.upsert(id, strUpdate, "", "", "");
         find = eus.find(id, "", "","", "",false);
         TestUtils.assertField(find, "recoveryEmail", strUpdate);
         TestUtils.assertField(find, "federationId", strUpdate);
         id = listId.get(1);
+        SessionMediator.setEmulationMode(id);
         eus.upsert(id, strUpdate, "", "", "");
         eus.upsert(id, "", "", strUpdate, "");
         find = eus.find(id, "", "","", "",false);
@@ -70,6 +75,7 @@ public class EndUserServiceTests {
         find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);
         int currentSize = find.size();
         listId.stream().forEach((id) -> {
+            SessionMediator.setEmulationMode(id);
             eus.delete(id);
         });
         find = eus.find(EndUserServiceTests.N_NO_ID, "", "","","",false);

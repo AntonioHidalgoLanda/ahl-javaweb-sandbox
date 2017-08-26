@@ -2,7 +2,7 @@ CREATE TABLE enduser (
   id   SERIAL PRIMARY KEY,
   federationId varchar (255) NOT NULL UNIQUE,
   profileName varchar (255) NOT NULL,
-  recoveryEmail varchar (255) NOT NULL,
+  recoveryEmail varchar (255),
   avatarUrl varchar(255)
 );
 
@@ -94,3 +94,17 @@ CREATE TABLE friend (
   friendid int4 not null references enduser(id),
   relationship smallint not null default 1    -- 0 (follower), 1 (friend)
 );
+
+/* Accessibiliy Tables */
+CREATE TABLE accessResource (
+  id SERIAL PRIMARY KEY,
+  tablename varchar (255) not null, -- CANNOT DO :'( references information_schema.tables(table_name)
+  localid int4 not null
+);
+
+CREATE TABLE access (
+  enduserid int4 not null references enduser(id),
+  accessid int4 not null references accessResource(id),
+  readonly BOOLEAN default false
+);
+

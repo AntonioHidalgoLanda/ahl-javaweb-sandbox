@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import product.SessionMediator;
 import utils.TestUtils;
 
 /**
@@ -73,6 +74,7 @@ public class BrandServiceTests {
     public void Crud(){
         List<Integer> listId = new ArrayList<>(BrandServiceTests.N_RECORDS);
         BrandService bs = new BrandService();
+        SessionMediator.setEmulationMode(1);
         
         // create
         this.smokeCreate(bs, listId);

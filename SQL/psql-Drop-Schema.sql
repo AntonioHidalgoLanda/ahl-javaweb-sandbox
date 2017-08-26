@@ -1,3 +1,6 @@
+DROP TABLE access;
+
+DROP TABLE accessResource;
 
 DROP TABLE friend;
 

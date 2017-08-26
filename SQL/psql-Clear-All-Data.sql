@@ -1,4 +1,8 @@
 
+DELETE FROM access;
+
+DELETE FROM accessResource;
+
 DELETE FROM friend;
 
 DELETE FROM igotitProduct;
