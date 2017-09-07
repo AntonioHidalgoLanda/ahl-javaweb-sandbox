@@ -60,8 +60,14 @@ public class SessionMediator {
             return testingEmulationUserId;
         }
         HttpSession httpSession = session();
-        String strId = httpSession.getAttribute(USERID_SESSION_NAME).toString();
-        return Integer.parseInt(strId);
+        Object oId = httpSession.getAttribute(USERID_SESSION_NAME);
+
+        if (oId != null){
+            return Integer.parseInt(oId.toString());
+        }
+        else {
+            return -1;
+        }
     }
     
     public static String sessionToString(){
@@ -83,7 +89,7 @@ public class SessionMediator {
                 && authentication.isAuthenticated()) {
             String currentUserName = authentication.getName();
             
-            httpSession.setAttribute(USERID_SESSION_NAME, currentUserName);
+            httpSession.setAttribute(USERID_SESSION_NAME, "-1");
             
             EndUserService endusers = new EndUserService();
             List<Map<String, Object>> lusers =
