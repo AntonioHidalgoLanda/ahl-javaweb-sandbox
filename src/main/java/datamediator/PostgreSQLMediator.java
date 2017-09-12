@@ -205,6 +205,25 @@ public class PostgreSQLMediator implements SqlMediator{
         return strSet;
     }
     
+    private String listOfPairsFind(List<String> listParams, String delimiter){
+        String strSet = "";
+        for (String fieldname : listParams){
+            if (!strSet.isEmpty()){
+                strSet += " "+delimiter+" ";
+            }
+            if(!this.alias.isEmpty()){
+                strSet += this.alias +".";
+            }
+            if (this.mapStringParam.containsKey(fieldname)){
+                strSet += fieldname + " LIKE ? ";
+            }
+            else{
+                strSet += fieldname + " = ? ";
+            }
+        }
+        return strSet;
+    }
+    
     private String listOfQuestionMarks(int lenght){
         return this.listOfQuestionMarks(lenght,",");
     }
@@ -352,7 +371,7 @@ public class PostgreSQLMediator implements SqlMediator{
         if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
             this.lastQuery += " WHERE ";
             if (!listParams.isEmpty()){
-                this.lastQuery += this.listOfPairs(listParams, "AND");
+                this.lastQuery += this.listOfPairsFind(listParams, "AND");
             }
             if (this.nId > -1 || !this.strId.isEmpty()){
                 if (!listParams.isEmpty()){
@@ -416,7 +435,7 @@ public class PostgreSQLMediator implements SqlMediator{
                     + " WHERE ";
 
         if (!listParams.isEmpty()){
-            this.lastQuery += this.listOfPairs(listParams, "AND");
+            this.lastQuery += this.listOfPairsFind(listParams, "AND");
         }
                 
         try (Connection connection = this.connectionPool.getConnection()){

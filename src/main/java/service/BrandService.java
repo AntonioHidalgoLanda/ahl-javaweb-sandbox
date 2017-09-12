@@ -117,6 +117,9 @@ public class BrandService implements SqlEntityMediator{
                 obj.put("productList", this.findProducts((Integer)obj.get("id")));
             });
         }
+        System.err.println("BRAND FIND");
+        System.err.println(((PostgreSQLMediator)sm).getLastQuery());
+        System.err.println("name: '"+name+"'");
         return result;
     }
     

@@ -89,7 +89,7 @@ SELECT pg_catalog.setval(pg_get_serial_sequence('igotit', 'id'), (SELECT MAX(id)
 --
 INSERT INTO brand (id,name) VALUES (1,'test_brand1' );
 INSERT INTO accessResource (id, tablename, localid)
-    VALUES ( 13, 'brand', 8);
+    VALUES ( 13, 'brand', 1);
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( 4, 13, 'false');
 INSERT INTO access (enduserid, accessid, readonly)
@@ -97,7 +97,7 @@ INSERT INTO access (enduserid, accessid, readonly)
 
 INSERT INTO brand (id,name) VALUES (2,'test_brand2' );
 INSERT INTO accessResource (id, tablename, localid)
-    VALUES ( 14, 'brand', 8);
+    VALUES ( 14, 'brand', 2);
 INSERT INTO access (enduserid, accessid, readonly)
     VALUES ( -1, 14, 'false');--all
 
