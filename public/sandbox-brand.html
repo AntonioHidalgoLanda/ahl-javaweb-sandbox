@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="/javascript/libs/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/javascript/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/javascript/product.js"></script>
+        <script type="text/javascript" src="/javascript/brand.js"></script>
+    </head>
+    <body>
+        <h1>SANDBOX</h1>
+        <div>
+            <div class="example-container brand">
+                <h2>Select Brand Example</h2>
+                <div class="ui-widget">
+                    <label for="brands">Brands </label>
+                    <input id="brand-id">
+                </div>
+            </div>
+            <div class="example-container brand">
+                <h2>List Brands Example</h2><!-- list and edit -->
+            </div>
+            <div class="example-container brand">
+                <h2>List My Brands Example</h2><!-- only brands tha I can edit -->
+            </div>
+        </div>
+        <script>
+            bindBrandAutocomplete('brand-id');
+        </script>
+    </body>
+</html>
