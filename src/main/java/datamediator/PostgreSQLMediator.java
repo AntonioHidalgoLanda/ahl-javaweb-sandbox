@@ -364,8 +364,9 @@ public class PostgreSQLMediator implements SqlMediator{
         this.listFindResult.clear();
         ArrayList<String> listParams = generateListParams();
         this.alias = "t";
-        this.lastQuery = "SELECT DISTINCT "
+        this.lastQuery = "SELECT "
                 + this.listToCsvString(this.listFindFields)
+                + " , bool_or(a.readonly) as readonly "
                 + " FROM " + this.tablename +" "+this.alias;
         this.lastQuery += this.accessibilityFindJoin();
         if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
@@ -380,6 +381,7 @@ public class PostgreSQLMediator implements SqlMediator{
                 this.lastQuery += " "+this.alias+".id = ? ";
             }
         }
+        this.lastQuery += " GROUP BY " + this.listToCsvString(this.listFindFields);
 
         try (Connection connection = this.connectionPool.getConnection()){
             PreparedStatement stmt = connection.prepareStatement(this.lastQuery);
@@ -408,6 +410,7 @@ public class PostgreSQLMediator implements SqlMediator{
                 }
                 result.put(fieldname, field);
             }
+            result.put("readonly", rs.getObject("readonly"));
             this.listFindResult.add(result);
           }
         } catch (Exception e) {
