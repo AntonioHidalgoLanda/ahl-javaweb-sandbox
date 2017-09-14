@@ -13,6 +13,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +26,16 @@ import org.springframework.web.bind.annotation.RestController;
 @SpringBootApplication(scanBasePackages = {"service"})
 @EnableOAuth2Sso
 @RestController
-public class Application {
+@Configuration
+// We need to extends WebSecurityConfigurerAdapter to avoid the dogy CSRF 
+public class Application  extends WebSecurityConfigurerAdapter{
+    
+    // We need to override this method from WebSecurityConfigurerAdapter to avoid the dogy CSRF
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable();
+    }
     
     @RequestMapping("/signin")
     public String signin() {
