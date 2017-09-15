@@ -12,11 +12,15 @@
  */
 
 // populate autocomplete searchbox
-    function selectBrand( brandid , name ) {
+    function selectBrand( brandid , name, brandDivId) {
         console.log("on development "+brandid);
+        var brandname = name;
         if (brandid <= 0){
-            addNewBrand(name.replace('(create new) ',''));
+            brandname = name.replace('(create new) ','');
+            addNewBrand(brandname, brandDivId);
+            
         }
+        $("#"+brandDivId).val(brandname);
     };
 
     function bindBrandAutocomplete(brandDivId){
@@ -43,14 +47,13 @@
             minLength: 3,
             select: function( event, ui ) {
                 event.preventDefault();
-                selectBrand( ui.item.value, ui.item.label);
-                $("#"+brandDivId).val(ui.item.label);
+                selectBrand( ui.item.value, ui.item.label,brandDivId);
             }
         });
     };
     
 // add new brand
-function addNewBrand(name, inputId) {
+function addNewBrand(name, brandDivId) {
     console.log("Creating brand "+name);
     var data = {'name':name};
     
@@ -60,11 +63,7 @@ function addNewBrand(name, inputId) {
         data: data,
         success: function(data)
         {   
-            if (typeof inputId !== 'undefined') {
-                $("#"+inputId).val(JSON.stringify(data));
-            }
             console.log(JSON.stringify(data));
-            
         }
       });
 }
