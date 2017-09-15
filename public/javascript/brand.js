@@ -11,6 +11,10 @@
  * 
  */
 
+function promtBrandEdit(id){
+    alert('Editing Brand '+id);
+}
+
 // populate brands table
 function populateBrandTable(brandTableId){
     $('#'+brandTableId).DataTable( {
@@ -18,19 +22,18 @@ function populateBrandTable(brandTableId){
         //"serverSide": true,
         "ajax": {
             "url": "/brands",
-            "dataSrc": ""
-            /* Interstingly we can modify the data returned by the web service
-             "dataSrc": function ( json ) {
-                console.log();
+            "dataSrc": function ( json ) {
+                for (var i=0; i<json.length; i++){
+                    var readonly = json[i].readonly;
+                    json[i].action =  (readonly)?' <button onclick="promtBrandEdit('+json[i].id+')" type="button">edit</button> ':"";
+                }
                 return json;
             }
-            */
         },
         "columns": [
-            { "data": "id" },
             { "data": "name" },
             { "data": "pageurl" },
-            { "data": "readonly" }
+            { "data": "action" }
         ]
     } );
 }
