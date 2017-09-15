@@ -12,19 +12,19 @@
  */
 
 // populate autocomplete searchbox
-    function selectBrand( brandid , name, brandDivId) {
-        console.log("on development "+brandid);
+    function selectBrand( brandid , name, brandInputId, brandIdInputId) {
         var brandname = name;
         if (brandid <= 0){
             brandname = name.replace('(create new) ','');
-            addNewBrand(brandname, brandDivId);
+            addNewBrand(brandname, brandInputId,brandIdInputId);
             
         }
-        $("#"+brandDivId).val(brandname);
+        $("#"+brandInputId).val(brandname);
+        $("#"+brandIdInputId).val(brandid);
     };
 
-    function bindBrandAutocomplete(brandDivId){
-        $( "#"+brandDivId ).autocomplete({
+    function bindBrandAutocomplete(brandInputId, brandIdInputId){
+        $( "#"+brandInputId ).autocomplete({
             source: function (request, response){
                 var data = {'extended' : 'false', 'name':'%'+request.term+'%'};
                 
@@ -47,14 +47,13 @@
             minLength: 3,
             select: function( event, ui ) {
                 event.preventDefault();
-                selectBrand( ui.item.value, ui.item.label,brandDivId);
+                selectBrand( ui.item.value, ui.item.label,brandInputId,brandIdInputId);
             }
         });
     };
     
 // add new brand
-function addNewBrand(name, brandDivId) {
-    console.log("Creating brand "+name);
+function addNewBrand(name, brandInputId, brandIdInputId) {
     var data = {'name':name};
     
     $.ajax({
@@ -63,7 +62,7 @@ function addNewBrand(name, brandDivId) {
         data: data,
         success: function(data)
         {   
-            console.log(JSON.stringify(data));
+            $("#"+brandIdInputId).val(data);
         }
       });
 }

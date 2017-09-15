@@ -22,7 +22,8 @@ and open the template in the editor.
                 <h2>Select Brand Example</h2>
                 <div class="ui-widget">
                     <label for="brands">Brands </label>
-                    <input id="brand-id">
+                    <input id="brand">
+                    <input type="hidden" id="brand-id">
                 </div>
             </div>
             <div class="example-container brand">
@@ -33,7 +34,7 @@ and open the template in the editor.
             </div>
         </div>
         <script>
-            bindBrandAutocomplete('brand-id');
+            bindBrandAutocomplete('brand','brand-id');
         </script>
     </body>
 </html>
