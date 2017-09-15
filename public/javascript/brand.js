@@ -11,6 +11,30 @@
  * 
  */
 
+// populate brands table
+function populateBrandTable(brandTableId){
+    $('#'+brandTableId).DataTable( {
+        "processing": true,
+        //"serverSide": true,
+        "ajax": {
+            "url": "/brands",
+            "dataSrc": ""
+            /* Interstingly we can modify the data returned by the web service
+             "dataSrc": function ( json ) {
+                console.log();
+                return json;
+            }
+            */
+        },
+        "columns": [
+            { "data": "id" },
+            { "data": "name" },
+            { "data": "pageurl" },
+            { "data": "readonly" }
+        ]
+    } );
+}
+
 // populate autocomplete searchbox
     function selectBrand( brandid , name, brandInputId, brandIdInputId) {
         var brandname = name;

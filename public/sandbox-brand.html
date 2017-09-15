@@ -8,10 +8,12 @@ and open the template in the editor.
     <head>
         <title>TODO supply a title</title>
         <link rel="stylesheet" type="text/css" href="/javascript/libs/jquery-ui-1.12.1/jquery-ui.min.css">
+        <link rel="stylesheet" type="text/css" href="/javascript/libs/DataTables/datatables.min.css"/>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script type="text/javascript" src="/javascript/libs/jquery-3.2.1.min.js"></script>
         <script type="text/javascript" src="/javascript/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/javascript/libs/DataTables/datatables.min.js"></script>
         <script type="text/javascript" src="/javascript/product.js"></script>
         <script type="text/javascript" src="/javascript/brand.js"></script>
     </head>
@@ -23,18 +25,39 @@ and open the template in the editor.
                 <div class="ui-widget">
                     <label for="brands">Brands </label>
                     <input id="brand">
-                    <input type="hidden" id="brand-id">
+                    <input type="hidden" id="brand-id" name="brandid">
                 </div>
             </div>
             <div class="example-container brand">
                 <h2>List Brands Example</h2><!-- list and edit -->
+                <table id="brand-table" class="display" cellspacing="0" width="100%">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>URL</th>
+                            <th>Readonly</th>
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>URL</th>
+                            <th>Readonly</th>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
             <div class="example-container brand">
                 <h2>List My Brands Example</h2><!-- only brands tha I can edit -->
             </div>
         </div>
         <script>
-            bindBrandAutocomplete('brand','brand-id');
+            $(document).ready(function() {
+                bindBrandAutocomplete('brand','brand-id');
+                populateBrandTable('brand-table');
+            });
         </script>
     </body>
 </html>
