@@ -16,8 +16,16 @@ and open the template in the editor.
         <script type="text/javascript" src="/javascript/libs/DataTables/datatables.min.js"></script>
         <script type="text/javascript" src="/javascript/product.js"></script>
         <script type="text/javascript" src="/javascript/brand.js"></script>
+        <script>
+            $(document).ready(function() {
+                bindBrandAutocomplete('brand','brand-id','brand-table');
+                populateBrandTable('brand-table','brand-dialog-form');
+                generateBrandBasicForm('brand-dialog-form','brand-table');
+            });
+        </script>
     </head>
     <body>
+        <div id="brand-dialog-form" title="Brand Form"></div>
         <h1>SANDBOX</h1>
         <div>
             <div class="example-container brand">
@@ -28,8 +36,9 @@ and open the template in the editor.
                     <input type="hidden" id="brand-id" name="brandid">
                 </div>
             </div>
+            
             <div class="example-container brand">
-                <h2>List Brands Example</h2><!-- list and edit -->
+                <h2>List Brands Example 1</h2><!-- list and edit -->
                 
                 <table id="brand-table" class="display" cellspacing="0" width="100%">
                     <thead>
@@ -49,14 +58,8 @@ and open the template in the editor.
                 </table>
             </div>
             <div class="example-container brand">
-                <h2>List My Brands Example</h2><!-- only brands tha I can edit -->
+                <h2>List My Brands Example 2</h2><!-- only brands tha I can edit -->
             </div>
         </div>
-        <script>
-            $(document).ready(function() {
-                bindBrandAutocomplete('brand','brand-id');
-                populateBrandTable('brand-table');
-            });
-        </script>
     </body>
 </html>
