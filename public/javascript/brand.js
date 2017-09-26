@@ -14,21 +14,16 @@
 function BrandController(){
     this.formDivId = "";
     this.tableId = "";
-    this.filterInputId = "";
-    this.filterDisplayId = "";
+    this.filterDiv = "";
     this.API_GET = "/brands";
     this.API_POST = "/brand";
     this.table = null;
     
     
 }
-BrandController.prototype.setFilterInputId = function (divId) {
-    this.filterInputId = divId;
-    return this;
-};
 
-BrandController.prototype.setFilterDisplayId = function (divId) {
-    this.filterDisplayId = divId;
+BrandController.prototype.setFilterDiv = function (divId) {
+    this.filterDiv = divId;
     return this;
 };
 
@@ -130,11 +125,23 @@ BrandController.displayBrandData = function (controller, brandData){
 // populate brands table
 BrandController.prototype.populateBrandTable = function (){
     var controller = this;
-    this.table= $('#'+this.tableId).DataTable( {
+    var tableDom = $('#'+this.tableId);
+    tableDom.html("<thead> "
+                 + " <tr> "
+                 +  " <th>Name</th> "
+                 +  " <th>URL</th> "
+                 + " </tr> "
+                 +"</thead>");
+    this.table= tableDom.DataTable( {
         "processing": true,
         "ajax": {
             "url": this.API_GET,
             "dataSrc": ""
+        },
+        "rowCallback": function( row, data, index ) {
+            if (typeof data['readonly'] !== 'undefined' && !data['readonly']){
+                $(row).css('color', 'gray');
+            }
         },
         "columns": [
             { "data": "name" },
@@ -159,17 +166,21 @@ BrandController.prototype.selectBrand = function ( brandid , name) {
             this.addNewBrand(brandname);
             
         }
-        if (this.filterDisplayId !== "") {
-            $("#"+this.filterDisplayId).val(brandname);
-        }
-        if (this.filterInputId !== "") {
-            $("#"+this.filterInputId).val(brandid);
+        if (this.filterDiv !== "") {
+            $("#"+this.filterDiv+"-id").val(brandid);
+            $("#"+this.filterDiv+"-name").val(brandname);
         }
     };
 
 BrandController.prototype.bindBrandAutocomplete = function (){
         var controller = this;
-        $( "#"+this.filterDisplayId ).autocomplete({
+        if (this.filterDiv !== ""){
+            var filterDom = $( "#"+this.filterDiv );
+            filterDom.html("<label for=\""+this.filterDiv+"-id\">Brand </label>"
+                    + "<input id=\""+this.filterDiv+"-name\">"
+                    + "<input type=\"hidden\" id=\""+this.filterDiv+"-id\" name=\"brandid\">");
+        };
+        $( "#"+this.filterDiv+"-name" ).autocomplete({
             source: function (request, response){
                 var data = {'extended' : 'false', 'name':'%'+request.term+'%'};
                 
@@ -199,7 +210,7 @@ BrandController.prototype.bindBrandAutocomplete = function (){
     
 // add new brand
 BrandController.prototype.addNewBrand = function(name) {
-    var data = {'name':name};
+    var data = {'name':name.trim()};
     var controller = this;
     
     $.ajax({
@@ -209,8 +220,8 @@ BrandController.prototype.addNewBrand = function(name) {
         success: function(data)
         {   
             // Refresh the table
-            if (controller.filterInputId !== ""){
-                $("#"+controller.filterInputId).val(data);
+            if (controller.filterDiv !== ""){
+                $("#"+controller.filterDiv+"-id").val(data);
             }
             if (controller.tableId !== ""){
                 controller.table.ajax.reload();
@@ -229,10 +240,10 @@ BrandController.prototype.updateBrand = function (id, name, pageurl) {
         data['id'] = id;
     }
     if (typeof name !== 'undefined'){
-        data['name'] = name;
+        data['name'] = name.trim();
     }
     if (typeof pageurl !== 'undefined'){
-        data['pageurl'] = pageurl;
+        data['pageurl'] = pageurl.trim();
     }
     
     $.ajax({

@@ -7,20 +7,20 @@ and open the template in the editor.
 <html>
     <head>
         <title>TODO supply a title</title>
-        <link rel="stylesheet" type="text/css" href="/javascript/libs/jquery-ui-1.12.1/jquery-ui.min.css">
-        <link rel="stylesheet" type="text/css" href="/javascript/libs/DataTables/datatables.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/libs/jquery-ui-1.12.1/jquery-ui.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/libs/DataTables/datatables.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/dialog.css"/>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script type="text/javascript" src="/javascript/libs/jquery-3.2.1.min.js"></script>
-        <script type="text/javascript" src="/javascript/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
-        <script type="text/javascript" src="/javascript/libs/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/libs/DataTables/datatables.min.js"></script>
         <script type="text/javascript" src="/javascript/product.js"></script>
         <script type="text/javascript" src="/javascript/brand.js"></script>
         <script>
             $(document).ready(function() {
                 var brandController = new BrandController();
-                brandController.setFilterInputId("filter-brand-id")
-                        .setFilterDisplayId("filter-brand-name")
+                brandController.setFilterDiv("filter-brand")
                         .setFormDivId("brand-dialog-form")
                         .setTableId("brand-table");
                 brandController.bindBrandAutocomplete();
@@ -35,29 +35,13 @@ and open the template in the editor.
         <div>
             <div class="example-container brand">
                 <h2>Select Brand Example</h2>
-                <div class="ui-widget">
-                    <label for="filter-brand-id">Brand </label>
-                    <input id="filter-brand-name">
-                    <input type="hidden" id="filter-brand-id" name="brandid">
+                <div class="ui-widget" id="filter-brand">
                 </div>
             </div>
             
             <div class="example-container brand">
                 <h2>List Brands Example 1</h2><!-- list and edit -->
-                
-                <table id="brand-table" class="display" cellspacing="0" width="100%">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>URL</th>
-                        </tr>
-                    </thead>
-                    <tfoot>
-                        <tr>
-                            <th>Name</th>
-                            <th>URL</th>
-                        </tr>
-                    </tfoot>
+                <table id="brand-table" class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0" width="100%">
                 </table>
             </div>
             <div class="example-container brand">
