@@ -18,9 +18,14 @@ and open the template in the editor.
         <script type="text/javascript" src="/javascript/brand.js"></script>
         <script>
             $(document).ready(function() {
-                bindBrandAutocomplete('brand','brand-id','brand-table');
-                populateBrandTable('brand-table','brand-dialog-form');
-                generateBrandBasicForm('brand-dialog-form','brand-table');
+                var brandController = new BrandController();
+                brandController.setFilterInputId("filter-brand-id")
+                        .setFilterDisplayId("filter-brand-name")
+                        .setFormDivId("brand-dialog-form")
+                        .setTableId("brand-table");
+                brandController.bindBrandAutocomplete();
+                brandController.populateBrandTable();
+                brandController.generateBrandBasicForm();
             });
         </script>
     </head>
@@ -31,9 +36,9 @@ and open the template in the editor.
             <div class="example-container brand">
                 <h2>Select Brand Example</h2>
                 <div class="ui-widget">
-                    <label for="brands">Brands </label>
-                    <input id="brand">
-                    <input type="hidden" id="brand-id" name="brandid">
+                    <label for="filter-brand-id">Brand </label>
+                    <input id="filter-brand-name">
+                    <input type="hidden" id="filter-brand-id" name="brandid">
                 </div>
             </div>
             
@@ -45,14 +50,12 @@ and open the template in the editor.
                         <tr>
                             <th>Name</th>
                             <th>URL</th>
-                            <th>Action</th>
                         </tr>
                     </thead>
                     <tfoot>
                         <tr>
                             <th>Name</th>
                             <th>URL</th>
-                            <th>Action</th>
                         </tr>
                     </tfoot>
                 </table>

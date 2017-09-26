@@ -11,18 +11,64 @@
  * 
  */
 
+function BrandController(){
+    this.formDivId = "";
+    this.tableId = "";
+    this.filterInputId = "";
+    this.filterDisplayId = "";
+    this.API_GET = "/brands";
+    this.API_POST = "/brand";
+    this.table = null;
+    
+    
+}
+BrandController.prototype.setFilterInputId = function (divId) {
+    this.filterInputId = divId;
+    return this;
+};
 
+BrandController.prototype.setFilterDisplayId = function (divId) {
+    this.filterDisplayId = divId;
+    return this;
+};
 
-function generateBrandBasicForm(divId,brandTableId){
-     var div = $("#"+divId);
+BrandController.prototype.setFormDivId = function (divId) {
+    this.formDivId = divId;
+    return this;
+};
+
+BrandController.prototype.setTableId = function (divId) {
+    this.tableId = divId;
+    return this;
+};
+
+BrandController.prototype.getDialog = function () {
+    return $("#"+this.formDivId).dialog();
+};
+
+BrandController.prototype.getIdInput = function () {
+    return $('#'+this.formDivId+' input[name="id"]');
+};
+
+BrandController.prototype.getNameInput = function () {
+    return $('#'+this.formDivId+' input[name="name"]');
+};
+
+BrandController.prototype.getPageurlInput = function () {
+    return $('#'+this.formDivId+' input[name="pageurl"]');
+};
+   
+BrandController.prototype.generateBrandBasicForm = function (){
+     var div = $("#"+this.formDivId);
+     var controller = this;
      div.html('<form> '
-             + '<div id="'+divId+'-brandid">Brand id: </div>'
+             + '<div id="'+this.formDivId+'-brandid">Brand id: </div>'
              + '<fieldset> '
-             + '   <input type="hidden" name="id" id="'+divId+'-id" value=""> '
-             + '   <label for="'+divId+'-name">Name</label> '
-             + '   <input type="text" name="name" id="'+divId+'-name" value="" class="text ui-widget-content ui-corner-all"> '
-             + '   <label for="'+divId+'-pageurl">page URL</label> '
-             + '   <input type="text" name="pageurl" id="'+divId+'-pageurl" value="" class="text ui-widget-content ui-corner-all"> '
+             + '   <input type="hidden" name="id" id="'+this.formDivId+'-id" value=""> '
+             + '   <label for="'+this.formDivId+'-name">Name</label> '
+             + '   <input type="text" name="name" id="'+this.formDivId+'-name" value="" class="text ui-widget-content ui-corner-all"> '
+             + '   <label for="'+this.formDivId+'-pageurl">page URL</label> '
+             + '   <input type="text" name="pageurl" id="'+this.formDivId+'-pageurl" value="" class="text ui-widget-content ui-corner-all"> '
              + '   <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"> '
              + '</fieldset> '
              + '</form>'); 
@@ -33,11 +79,11 @@ function generateBrandBasicForm(divId,brandTableId){
       modal: true,
       buttons: {
         "Update Brand": function(){
-            var id = $('#'+divId+'-id').val();
-            var name = $('#'+divId+'-name').val();
-            var pageurl = $('#'+divId+'-pageurl').val();
-            updateBrand(id, name, pageurl,brandTableId);
-            $(this).dialog("close");
+            var id = controller.getIdInput().val();
+            var name = controller.getNameInput().val();
+            var pageurl = controller.getPageurlInput().val();
+            controller.updateBrand(id, name, pageurl);
+            controller.getDialog().dialog("close");
         },
         Cancel: function() {
             $(this).dialog("close");
@@ -46,91 +92,93 @@ function generateBrandBasicForm(divId,brandTableId){
       close: function() {
       }
     });
- 
-    
-}
+    return this;
+};
 
-function promtBrandEdit(id, divId){
-    retrieveBrand(id,divId,displayBrandData);
-}
+BrandController.prototype.promtBrandEdit = function (id){
+    this.retrieveBrand(id,BrandController.displayBrandData);
+};
 
-function retrieveBrand(id,divId,displayFunction){
-    var url = "/brands";
+BrandController.prototype.retrieveBrand = function(id,displayFunction){
     var data = {'extended' : 'true','id':id};
-    //alert(JSON.stringify(data)); 
+    var controller = this; 
 
     $.ajax({
            type: "GET",
-           url: url,
+           url: this.API_GET,
            data: data,
            success: function(data)
            {
                 if (data.constructor === Array){
-                    displayFunction(divId,data[0]);
+                    displayFunction(controller,data[0]);
                 }
            }
          });
-}
+};
 
-function displayBrandData(divId,brandData){
+BrandController.displayBrandData = function (controller, brandData){
    //alert(JSON.stringify(brandData));  // Display also Product IDs
-   var dialog = $("#"+divId).dialog();
-   var pBrandId = $('#'+divId+'-brandid');
-   var fieldId = $('#'+divId+' input[name="id"]');
-   var fieldName = $('#'+divId+' input[name="name"]');
-   var fieldPageurl = $('#'+divId+' input[name="pageurl"]');
+   var pBrandId = $('#'+controller.formDivId+'-brandid');
    pBrandId.html('Brand id: '+brandData["id"]);
-   fieldId.val(brandData["id"]);
-   fieldName.val(brandData["name"]);
-   fieldPageurl.val(brandData['pageurl']);
-   dialog.dialog( "open" );
-}
+   controller.getIdInput().val(brandData["id"]);
+   controller.getNameInput().val(brandData["name"]);
+   controller.getPageurlInput().val(brandData['pageurl']);
+   controller.getDialog().dialog( "open" );
+   return controller;
+};
 
 // populate brands table
-function populateBrandTable(brandTableId,divBrandFormId){
-    $('#'+brandTableId).DataTable( {
+BrandController.prototype.populateBrandTable = function (){
+    var controller = this;
+    this.table= $('#'+this.tableId).DataTable( {
         "processing": true,
         "ajax": {
-            "url": "/brands",
-            "dataSrc": function ( json ) {
-                for (var i=0; i<json.length; i++){
-                    var readonly = json[i].readonly;
-                    json[i].action =  (readonly)?' <button onclick="promtBrandEdit('+json[i].id+',\''+divBrandFormId+'\')" type="button">edit</button> ':"";
-                }
-                return json;
-            }
+            "url": this.API_GET,
+            "dataSrc": ""
         },
         "columns": [
             { "data": "name" },
-            { "data": "pageurl" },
-            { "data": "action" }
+            { "data": "pageurl" }
         ]
     } );
-}
+    $('#'+this.tableId+' tbody').on( 'click', 'tr', function () {
+        var rowData = controller.table.row(this).data();
+        var id = rowData['id'];
+        var readonly = rowData['readonly'];
+        if (readonly){
+            controller.promtBrandEdit(id);
+        }
+    } );
+};
 
 // populate autocomplete searchbox
-    function selectBrand( brandid , name, brandInputId, brandIdInputId,brandTableId) {
+BrandController.prototype.selectBrand = function ( brandid , name) {
         var brandname = name;
         if (brandid <= 0){
             brandname = name.replace('(create new) ','');
-            addNewBrand(brandname,brandIdInputId,brandTableId);
+            this.addNewBrand(brandname);
             
         }
-        $("#"+brandInputId).val(brandname);
-        $("#"+brandIdInputId).val(brandid);
+        if (this.filterDisplayId !== "") {
+            $("#"+this.filterDisplayId).val(brandname);
+        }
+        if (this.filterInputId !== "") {
+            $("#"+this.filterInputId).val(brandid);
+        }
     };
 
-    function bindBrandAutocomplete(brandInputId, brandIdInputId,brandTableId){
-        $( "#"+brandInputId ).autocomplete({
+BrandController.prototype.bindBrandAutocomplete = function (){
+        var controller = this;
+        $( "#"+this.filterDisplayId ).autocomplete({
             source: function (request, response){
                 var data = {'extended' : 'false', 'name':'%'+request.term+'%'};
                 
                 $.ajax({
                     type: "GET",
-                    url: '/brands',
+                    url: controller.API_GET,
                     data: data,
                     success: function(data)
-                    {   
+                    {
                         var source = [];
                         for (var element in data){
                             var brand = data[element];
@@ -144,33 +192,39 @@ function populateBrandTable(brandTableId,divBrandFormId){
             minLength: 3,
             select: function( event, ui ) {
                 event.preventDefault();
-                selectBrand( ui.item.value, ui.item.label,brandInputId,brandIdInputId,brandTableId);
+                controller.selectBrand( ui.item.value, ui.item.label);
             }
         });
     };
     
 // add new brand
-function addNewBrand(name, brandIdInputId,brandTableId) {
+BrandController.prototype.addNewBrand = function(name) {
     var data = {'name':name};
+    var controller = this;
     
     $.ajax({
         type: "POST",
-        url: '/brand',
+        url: controller.API_POST,
         data: data,
         success: function(data)
         {   
             // Refresh the table
-            $("#"+brandIdInputId).val(data);
-            $('#'+brandTableId).DataTable().ajax.reload();
+            if (controller.filterInputId !== ""){
+                $("#"+controller.filterInputId).val(data);
+            }
+            if (controller.tableId !== ""){
+                controller.table.ajax.reload();
+            }
         }
       });
-}
+};
 
 // Subscribe to a brand -- give an user write rights to a brand
 
 // Update Brand profile
-function updateBrand(id, name, pageurl,brandTableId) {
+BrandController.prototype.updateBrand = function (id, name, pageurl) {
     var data = {};
+    var controller = this;
     if (typeof id !== 'undefined'){
         data['id'] = id;
     }
@@ -183,15 +237,16 @@ function updateBrand(id, name, pageurl,brandTableId) {
     
     $.ajax({
         type: "POST",
-        url: '/brand',
+        url: controller.API_POST,
         data: data,
         success: function(data)
         {   
-            $('#'+brandTableId).DataTable().ajax.reload();
-            //console.log(JSON.stringify(data));
+            if (controller.tableId !== ""){
+                controller.table.ajax.reload();
+            }
         }
       });
-}
+};
 
 // upsert branded Igotit
 
