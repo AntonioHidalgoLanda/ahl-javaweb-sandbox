@@ -15,6 +15,7 @@ and open the template in the editor.
         <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
         <script type="text/javascript" src="/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
         <script type="text/javascript" src="/libs/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="/javascript/controller.js"></script>
         <script type="text/javascript" src="/javascript/product.js"></script>
         <script type="text/javascript" src="/javascript/brand.js"></script>
         <script>
@@ -23,9 +24,9 @@ and open the template in the editor.
                 brandController.setFilterDiv("filter-brand")
                         .setFormDivId("brand-dialog-form")
                         .setTableId("brand-table");
-                brandController.bindBrandAutocomplete();
-                brandController.populateBrandTable();
-                brandController.generateBrandBasicForm();
+                brandController.bindAutocomplete();
+                brandController.populateTable();
+                brandController.generateFormDialog();
             });
         </script>
     </head>
