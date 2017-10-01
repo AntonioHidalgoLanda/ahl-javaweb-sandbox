@@ -100,7 +100,7 @@ public class ProductService  implements SqlEntityMediator{
             sm.addFindParam("brandid", brandid, 1);
         }
         if (brandedIgotitId > 0){
-            sm.addFindParam("federationId", brandedIgotitId, 1);
+            sm.addFindParam("brandedIgotitId", brandedIgotitId, 1);
         }
         if (!name.isEmpty()){
             sm.addFindParam("name", name, 1);

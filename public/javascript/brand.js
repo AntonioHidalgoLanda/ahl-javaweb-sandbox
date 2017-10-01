@@ -2,16 +2,6 @@
  * IMPORTANT: BrandController is a subclass of controller and you need to 
  * load both js files
  * 
- * Subscribe users to a brand (admin only)
- * 
- * Update contact details
- * 
- * Update page Url
- * 
- * Add branded Igotit
- * 
- * Add SKU???
- * 
  */
 
 /* global Controller */
@@ -55,6 +45,7 @@ Controller.prototype.generateInputFieldsForm = function (){
 };
 
 // Subscribe to a brand -- give an user write rights to a brand
+// INITIALLY THIS WILL BE DONE WITH SQL SCRIPT DIRECTLY IN THE DB
 
 // upsert branded Igotit
 

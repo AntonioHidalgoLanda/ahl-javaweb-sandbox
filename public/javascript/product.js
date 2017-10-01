@@ -1,7 +1,6 @@
 /* 
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * IMPORTANT: BrandController is a subclass of controller and you need to 
+ * load both js files
  * 
  * browse
  * 
@@ -12,85 +11,78 @@
  * rate
  */
 
-// search
-// generate form
+/* global Controller */
 
-function generateProductSearchForm(formContainerId,resultContainerId){
-    var formContainer=document.getElementById(formContainerId);
-    var form = document.createElement("form");
-    form.method = 'GET';
-    form.id = formContainerId + "-form";
-    form.onsubmit = 
-    form.onsubmit = function (){
-        var url = "/products"; // the script where you handle the form input.
-        var resultContainer=document.getElementById(resultContainerId);
-        resultContainer.innerHTML = "loading...";
-        //var data = $("#"+form.id).serialize();
-        var data = {'extended' : 'false'};
-        var name = $("[name='name']", form).val();
-        var brandid = $("[name='brandid']", form).val();
-        if (name !== ""){
-            data["name"] = name;
-        }
-        if (brandid !== ""){
-            data["brandid"] = brandid;
-        }
-        //alert(JSON.stringify(data)); 
-
-        $.ajax({
-               type: "GET",
-               url: url,
-               data: data, // serializes the form's elements.
-               success: function(data)
-               {
-                   var resultContainer=document.getElementById(resultContainerId);
-                   resultContainer.innerHTML = "";
-                   for (var element in data){
-                       var product = data[element];
-                       var entry = document.createElement("div");
-                       entry.class = "product result-entry";
-                       entry.id = "product_"+product.id;
-                       // entry.innerHTML = JSON.stringify(data[element]);
-                       entry.innerHTML += '<h4>'+product.name+'</h4>'
-                             + '<div><strong>SKU: </strong>'+product.sku+'</div>'
-                             + '<div><strong>Brand: </strong>'+product.brandid+'</div>'
-                             + '<div><strong>Details: </strong>'+product.brandedIgotitId+'</div>'
-                             + '';
-                       resultContainer.appendChild(entry);
-                   }
-               }
-             });
-
-        return false; // avoid to execute the actual submit of the form.
-    };
-    form.innerHTML = ' \
-    <div> \
-       name: \
-       <input name="name" type="text"></input> \
-       <input type="checkbox" name="criteria" value="name" checked> \
-    </div> ';
-    form.innerHTML += ' \
-    <div> \
-       brand: \
-       <input name="brandid" type="number"></input> \
-       <input type="checkbox" name="criteria" value="brand"> \
-    </div> ';
-    form.innerHTML += ' \
-    <input type="submit" value="Submit">\
-    ';
-    formContainer.appendChild(form);
+function ProductController(){
+    Controller.call(this,"/products","/product");
+    
 }
 
-// search by tags
-
-// submit BrowseForm
-
-// browse
+ProductController.prototype = Object.create(Controller.prototype);
+ProductController.prototype.constructor = ProductController;
 
 
-// create
+
+// override
+ProductController.prototype.generateTableStructure = function () {
+    var tableDom = $('#'+this.tableId);
+    tableDom.html("<thead> "
+                 + " <tr> "
+                 +  " <th>Name</th> "
+                 +  " <th>Brand</th> "
+                 +  " <th>SKU</th> "
+                 +  " <th>Brand Link</th> "
+                 + " </tr> "
+                 +"</thead>");
+    return this;
+};
+
+// override
+ProductController.prototype.getTableColumnMap = function () {
+    return [
+            { "data": this.namingField },
+            { "data": "brand" },
+            { "data": "sku" },
+            { "data": "brandLink" }
+        ];
+        // hidden data: brandedIgotitId (field); shoppingOnlineLinkList (list); storeList (list); igotitList (list)
+};
 
 
-// rate
+// Maybe, use a brand cache to retrieve data like names
 
+// override
+ProductController.prototype.tableAdaptData = function (json){
+    for (var i in json){
+        json[i].brand = '';
+    }
+    return json;
+};
+
+// override
+ProductController.prototype.generateInputFieldsForm = function (){
+    return '   <label for="'+this.formDivId+'-name">Name</label> '
+         + '   <input type="text" name="name" id="'+this.formDivId+'-name" value="" class="text ui-widget-content ui-corner-all"> '
+         + '   <label for="'+this.formDivId+'-sku">SKU</label> '
+         + '   <input type="text" name="sku" id="'+this.formDivId+'-sku" value="" class="text ui-widget-content ui-corner-all"> '
+         // BRAND ?? Who can change a brand
+         // Use Case, reseller, they shouldn't be changing but clonning
+         // We need Garbage collector to remove products with no IGOTIT, 
+         + '   <label for="'+this.formDivId+'-brandLink">Brand Link</label> '
+         + '   <input type="text" name="brandLink" id="'+this.formDivId+'-brandLink" value="" class="text ui-widget-content ui-corner-all"> ';
+
+         // Missing -- LISTS
+         // shoppingOnlineLinkList (list); storeList (list); igotitList (list)
+         // 
+         // SKU, brandedIgotitId, name, brand
+         //   showld be onli accessible to Brand (people with  Write rigths)
+         //        Brand should have themselves as a reseller to
+         //        
+         // shoppingOnlineLinkList, storeList
+         //    Are external links, and are editable by Resellers which has
+         //    WRITE access to the pertinent tables
+         // igotitList No editable here
+};
+
+// dialod for readonly
 

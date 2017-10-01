@@ -158,6 +158,11 @@ Controller.prototype.displayData = function (data){
    return this;
 };
 
+// Could be Overrided
+Controller.prototype.tableAdaptData = function (json){
+    return json;
+};
+
 Controller.prototype.populateTable = function (){
     var controller = this;
     this.generateTableStructure();
@@ -165,7 +170,9 @@ Controller.prototype.populateTable = function (){
         "processing": true,
         "ajax": {
             "url": this.API_GET,
-            "dataSrc": ""
+            "dataSrc": function (json){
+                return controller.tableAdaptData(json);
+            }
         },
         "rowCallback": function( row, data, index ) {
             if (typeof data['readonly'] !== 'undefined' && !data['readonly']){

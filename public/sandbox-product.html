@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <link rel="stylesheet" type="text/css" href="/libs/jquery-ui-1.12.1/jquery-ui.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/libs/DataTables/datatables.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/dialog.css"/>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/libs/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="/javascript/controller.js"></script>
+        <script type="text/javascript" src="/javascript/product.js"></script>
+        <script type="text/javascript" src="/javascript/brand.js"></script>
+        <script>
+            $(document).ready(function() {
+                var productCtrl = new ProductController();
+                productCtrl.setFilterDiv("filter-product")
+                        .setFormDivId("product-dialog-form")
+                        .setTableId("product-table");
+                productCtrl.bindAutocomplete();
+                productCtrl.populateTable();
+                productCtrl.generateFormDialog();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="product-dialog-form" title="Brand Form"></div>
+        <h1>SANDBOX</h1>
+        <div>
+            <div class="example-container product">
+                <h2>Select Product Example</h2>
+                <div class="ui-widget" id="filter-product">
+                </div>
+            </div>
+            
+            <div class="example-container product">
+                <h2>List Product Example 1</h2><!-- list and edit -->
+                <table id="product-table" class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0" width="100%">
+                </table>
+            </div>
+        </div>
+    </body>
+</html>
