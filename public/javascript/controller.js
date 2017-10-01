@@ -7,6 +7,7 @@ function Controller(api_get,api_post){
     this.tableId = "";
     this.filterDiv = "";
     this.namingField = "name";
+    this.identifyingField = "id";
     this.API_GET = api_get;
     this.API_POST = api_post;
     this.table = null;
@@ -168,12 +169,7 @@ Controller.prototype.populateTable = function (){
     this.generateTableStructure();
     this.table= $('#'+this.tableId).DataTable( {
         "processing": true,
-        "ajax": {
-            "url": this.API_GET,
-            "dataSrc": function (json){
-                return controller.tableAdaptData(json);
-            }
-        },
+        "rowId" : this.identifyingField,
         "rowCallback": function( row, data, index ) {
             if (typeof data['readonly'] !== 'undefined' && !data['readonly']){
                 $(row).css('color', 'gray');
@@ -189,6 +185,28 @@ Controller.prototype.populateTable = function (){
             controller.retrieve(id);
         }
     } );
+    this.tableRefresh();
+};
+
+Controller.prototype.tableRefresh = function(){
+    var controller = this;
+    $.ajax({
+           type: "GET",
+           url: this.API_GET,
+           success: function(dataSet)
+           {
+                controller.tableLoad(dataSet);
+           }
+         });
+};
+
+Controller.prototype.tableLoad = function(dataSet){
+    if (this.table !== null){
+        this.table.clear(0);
+        this.table.rows.add(dataSet);
+        this.table.draw();
+    }
+    return this;
 };
 
 Controller.prototype.select = function ( id , name) {
@@ -249,9 +267,7 @@ Controller.prototype.addNew = function(name) {
             if (controller.filterDiv !== ""){
                 $("#"+controller.filterDiv+"-id").val(data);
             }
-            if (controller.tableId !== ""){
-                controller.table.ajax.reload();
-            }
+            controller.tableRefresh();
         }
       });
 };
@@ -263,11 +279,9 @@ Controller.prototype.update = function (data) {
         type: "POST",
         url: controller.API_POST,
         data: data,
-        success: function(data)
+        success: function()
         {   
-            if (controller.tableId !== ""){
-                controller.table.ajax.reload();
-            }
+            controller.tableRefresh();
         }
       });
 };

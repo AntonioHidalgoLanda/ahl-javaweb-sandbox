@@ -48,15 +48,47 @@ ProductController.prototype.getTableColumnMap = function () {
         // hidden data: brandedIgotitId (field); shoppingOnlineLinkList (list); storeList (list); igotitList (list)
 };
 
+ProductController.prototype.tableBrandRefresh = function(productid, brandid){
+      var controller = this;
+      $.ajax({
+            type: "GET",
+            url: '/brands',
+            data: {'id':brandid},
+            success: function(brandDataSet)
+            {
+                var row = controller.table.row("#"+productid);
+                var data = row.data();
+                data ['brand'] = brandDataSet[0].name;
+                row.data(data).draw();
+            }
+          });
+};
 
-// Maybe, use a brand cache to retrieve data like names
 
-// override
-ProductController.prototype.tableAdaptData = function (json){
-    for (var i in json){
-        json[i].brand = '';
-    }
-    return json;
+//
+// #TODO
+// Ideally, we want to use a first call to all the products and then
+// a second call to all the brands that we need
+// but, currently, it is not possible, because we can only request 
+// one single ID to brands, not a list
+ProductController.prototype.tableRefresh = function(){
+    var controller = this;
+    $.ajax({
+           type: "GET",
+           url: this.API_GET,
+           success: function(productDataSet)
+           {
+               for (var i in productDataSet){
+                   productDataSet[i]['brand'] = '';
+               }
+               controller.tableLoad(productDataSet);
+               
+               for (var i in productDataSet){
+                   var product = productDataSet[i];
+                   controller.tableBrandRefresh(product.id,product.brandid);
+                }
+           }
+         });
 };
 
 // override
