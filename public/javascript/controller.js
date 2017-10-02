@@ -4,6 +4,7 @@
 
 function Controller(api_get,api_post){
     this.formDivId = "";
+    this.viewDivId = "";
     this.tableId = "";
     this.filterDiv = "";
     this.namingField = "name";
@@ -17,6 +18,11 @@ function Controller(api_get,api_post){
 
 Controller.prototype.setFormDivId = function (divId) {
     this.formDivId = divId;
+    return this;
+};
+
+Controller.prototype.setViewDivId = function (divId) {
+    this.viewDivId = divId;
     return this;
 };
 
@@ -34,8 +40,13 @@ Controller.prototype.setNamingField = function(name){
     this.namingField = name;
 };
 
-Controller.prototype.getDialog = function () {
-    return $("#"+this.formDivId).dialog();
+Controller.prototype.setIdentifyingField = function(id){
+    this.identifyingField = id;
+};
+
+Controller.prototype.getDialog = function (readonly) {
+    return (readonly)?$("#"+this.viewDivId).dialog()
+    : $("#"+this.formDivId).dialog();
 };
 
 Controller.prototype.getInput = function (name) {
@@ -43,7 +54,11 @@ Controller.prototype.getInput = function (name) {
 };
 
 Controller.prototype.getIdInput = function () {
-    return this.getInput('id');
+    return this.getInput(this.identifyingField);
+};
+
+Controller.prototype.getNameInput = function () {
+    return this.getInput(this.namingField);
 };
 
 // This method should be override
@@ -83,6 +98,14 @@ Controller.prototype.generateForm = function (){
     return this;
 };
 
+// Could be override
+Controller.prototype.generateView = function (){
+     var div = $("#"+this.viewDivId);
+     div.html( '<div id="p-'+this.formViewId+'-'+this.identifyingField+'"> id: </div>'
+             + '<div id="p-'+this.formViewId+'-'+this.namingField+'"> name: </div>');
+    return this;
+};
+
 // This method could be override
 Controller.prototype.generateAutocompleteDiv = function () {
     if (this.filterDiv !== ""){
@@ -93,7 +116,26 @@ Controller.prototype.generateAutocompleteDiv = function () {
     };
     return this;
 };
-   
+
+Controller.prototype.generateViewDialog   = function (){
+     var div = $("#"+this.viewDivId);
+     this.generateView();
+     div.dialog({
+      autoOpen: false,
+      height: 400,
+      width: 350,
+      modal: true,
+      buttons: {
+        "OK": function() {
+            $(this).dialog("close");
+        }
+      },
+      close: function() {
+      }
+    });
+    return this;
+};
+
 Controller.prototype.generateFormDialog = function (){
      var div = $("#"+this.formDivId);
      var controller = this;
@@ -104,7 +146,7 @@ Controller.prototype.generateFormDialog = function (){
       width: 350,
       modal: true,
       buttons: {
-        "Update Brand": function(){
+        "Update": function(){
             var arrInputs = $('#'+controller.formDivId+' input');
             var data = {};
             for (var i in arrInputs){
@@ -115,7 +157,7 @@ Controller.prototype.generateFormDialog = function (){
             }
             
             controller.update(data);
-            controller.getDialog().dialog("close");
+            controller.getDialog(false).dialog("close");
         },
         Cancel: function() {
             $(this).dialog("close");
@@ -127,7 +169,7 @@ Controller.prototype.generateFormDialog = function (){
     return this;
 };
 
-Controller.prototype.retrieve = function(id){
+Controller.prototype.retrieve = function(id,readonly){
     var data = {'extended' : 'true','id':id};
     var controller = this;
 
@@ -138,13 +180,13 @@ Controller.prototype.retrieve = function(id){
            success: function(data)
            {
                 if (data.constructor === Array){
-                    controller.displayData(data[0]);
+                    controller.displayData(data[0], readonly);
                 }
            }
          });
 };
 
-Controller.prototype.displayData = function (data){
+Controller.prototype.displayData = function (data, readonly){
    var pId = $('#p-'+this.formDivId+'-id');
    pId.html('id: '+data["id"]);
    for(var fieldname in data){
@@ -155,7 +197,7 @@ Controller.prototype.displayData = function (data){
         }
    }
    // TODO Display dependant objects.
-   this.getDialog().dialog( "open" );
+   this.getDialog(readonly).dialog( "open" );
    return this;
 };
 
@@ -171,7 +213,7 @@ Controller.prototype.populateTable = function (){
         "processing": true,
         "rowId" : this.identifyingField,
         "rowCallback": function( row, data, index ) {
-            if (typeof data['readonly'] !== 'undefined' && !data['readonly']){
+            if (typeof data['readonly'] !== 'undefined' && data['readonly']){
                 $(row).css('color', 'gray');
             }
         },
@@ -181,11 +223,10 @@ Controller.prototype.populateTable = function (){
         var rowData = controller.table.row(this).data();
         var id = rowData['id'];
         var readonly = rowData['readonly'];
-        if (readonly){
-            controller.retrieve(id);
-        }
+        controller.retrieve(id, readonly);
     } );
     this.tableRefresh();
+    return this;
 };
 
 Controller.prototype.tableRefresh = function(){
@@ -251,6 +292,7 @@ Controller.prototype.bindAutocomplete = function (){
                 controller.select( ui.item.value, ui.item.label);
             }
         });
+        return this;
     };
     
 Controller.prototype.addNew = function(name) {

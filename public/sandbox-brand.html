@@ -23,15 +23,18 @@ and open the template in the editor.
                 var brandController = new BrandController();
                 brandController.setFilterDiv("filter-brand")
                         .setFormDivId("brand-dialog-form")
+                        .setViewDivId("brand-dialog-display")
                         .setTableId("brand-table");
                 brandController.bindAutocomplete();
                 brandController.populateTable();
-                brandController.generateFormDialog();
+                brandController.generateFormDialog()
+                brandController.generateViewDialog();
             });
         </script>
     </head>
     <body>
-        <div id="brand-dialog-form" title="Brand Form"></div>
+        <div id="brand-dialog-form" title="Brand Edit"></div>
+        <div id="brand-dialog-display" title="Brand View"></div>
         <h1>SANDBOX</h1>
         <div>
             <div class="example-container brand">
