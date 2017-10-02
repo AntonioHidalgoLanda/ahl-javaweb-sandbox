@@ -67,7 +67,7 @@ public class BrandService implements SqlEntityMediator{
     public SqlEntityMediator grantAccess(int entityId) {
         SqlMediator sm = this.getSqlMediator();
         if(!sm.hasAccessNoInitialized(entityId)){
-            sm.grantAccessAllUsers(false, Arrays.asList(entityId));
+            sm.grantAccessAllUsers(true, Arrays.asList(entityId));
         }
         return this;
     }

@@ -182,7 +182,7 @@ INSERT INTO product (id,sku,brandid,brandedIgotitId,name) VALUES (1,'test_SKU_X1
 INSERT INTO accessResource (id, tablename, localid)
     VALUES ( 20, 'product', 1);
 INSERT INTO access (enduserid, accessid, readonly)
-    VALUES ( -1, 20, 'true');
+    VALUES ( -1, 20, 'false');
 
 INSERT INTO product (id,sku,brandid,brandedIgotitId,name) VALUES (2,'test_SKU_X2',1,5,'product2-brand1' );
 INSERT INTO accessResource (id, tablename, localid)

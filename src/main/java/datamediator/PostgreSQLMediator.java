@@ -366,7 +366,7 @@ public class PostgreSQLMediator implements SqlMediator{
         this.alias = "t";
         this.lastQuery = "SELECT "
                 + this.listToCsvString(this.listFindFields)
-                + " , bool_or(a.readonly) as readonly "
+                + " , bool_and(a.readonly) as readonly " // SHOULD IT BE AND AND?
                 + " FROM " + this.tablename +" "+this.alias;
         this.lastQuery += this.accessibilityFindJoin();
         if (!listParams.isEmpty() || this.nId > -1 || !this.strId.isEmpty()){
