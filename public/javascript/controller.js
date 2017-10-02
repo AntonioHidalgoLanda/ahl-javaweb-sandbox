@@ -53,12 +53,22 @@ Controller.prototype.getInput = function (name) {
     return $('#'+this.formDivId+' input[name="'+name+'"]');
 };
 
+Controller.prototype.getDisplayField = function (name) {
+    return $('#f-'+this.viewDivId+'-'+name+'');
+};
+
 Controller.prototype.getIdInput = function () {
     return this.getInput(this.identifyingField);
 };
 
 Controller.prototype.getNameInput = function () {
     return this.getInput(this.namingField);
+};
+
+Controller.prototype.displayDataField = function (fieldname,fieldValue){
+    this.getInput(fieldname).val(fieldValue);
+    this.getDisplayField(fieldname).html(fieldValue);
+    return this;
 };
 
 // This method should be override
@@ -101,8 +111,10 @@ Controller.prototype.generateForm = function (){
 // Could be override
 Controller.prototype.generateView = function (){
      var div = $("#"+this.viewDivId);
-     div.html( '<div id="p-'+this.formViewId+'-'+this.identifyingField+'"> id: </div>'
-             + '<div id="p-'+this.formViewId+'-'+this.namingField+'"> name: </div>');
+     div.html( '<label for="f-'+this.viewDivId+'-'+this.identifyingField+'">ID</label>'
+             + '<div id="f-'+this.viewDivId+'-'+this.identifyingField+'"></div>'
+             + '<label for="f-'+this.viewDivId+'-'+this.namingField+'">Name</label>'
+             + '<div id="f-'+this.viewDivId+'-'+this.namingField+'"></div>');
     return this;
 };
 
@@ -169,6 +181,7 @@ Controller.prototype.generateFormDialog = function (){
     return this;
 };
 
+// Could get override to retrieve more complex data
 Controller.prototype.retrieve = function(id,readonly){
     var data = {'extended' : 'true','id':id};
     var controller = this;
@@ -190,11 +203,8 @@ Controller.prototype.displayData = function (data, readonly){
    var pId = $('#p-'+this.formDivId+'-id');
    pId.html('id: '+data["id"]);
    for(var fieldname in data){
-        var fieldInput = this.getInput(fieldname);
-        if (fieldInput.length > 0){
-            var fieldValue = data[fieldname];
-            fieldInput.val(fieldValue);
-        }
+        var fieldValue = data[fieldname];
+        this.displayDataField(fieldname,fieldValue);
    }
    // TODO Display dependant objects.
    this.getDialog(readonly).dialog( "open" );

@@ -38,6 +38,14 @@ ProductController.prototype.generateTableStructure = function () {
 };
 
 // override
+ProductController.prototype.generateInputFieldsForm = function (){
+    return '   <label for="'+this.formDivId+'-name">Name</label> '
+         + '   <input type="text" name="name" id="'+this.formDivId+'-name" value="" class="text ui-widget-content ui-corner-all"> '
+         + '   <label for="'+this.formDivId+'-sku">SKU</label> '
+         + '   <input type="text" name="sku" id="'+this.formDivId+'-sku" value="" class="text ui-widget-content ui-corner-all"> ';
+};
+
+// override
 ProductController.prototype.getTableColumnMap = function () {
     return [
             { "data": this.namingField },
@@ -48,6 +56,7 @@ ProductController.prototype.getTableColumnMap = function () {
         // hidden data: brandedIgotitId (field); shoppingOnlineLinkList (list); storeList (list); igotitList (list)
 };
 
+// this should be private
 ProductController.prototype.tableBrandRefresh = function(productid, brandid){
       var controller = this;
       $.ajax({
@@ -91,6 +100,20 @@ ProductController.prototype.tableRefresh = function(){
          });
 };
 
+// Could be override
+ProductController.prototype.generateView = function (){
+     var div = $("#"+this.viewDivId);
+     div.html( '<label for="f-'+this.viewDivId+'-'+this.identifyingField+'">ID</label>'
+             + '<div id="f-'+this.viewDivId+'-'+this.identifyingField+'"></div>'
+             + '<label for="f-'+this.viewDivId+'-brand">Brand</label>'
+             + '<div id="f-'+this.viewDivId+'-brand"></div>'
+             + '<label for="f-'+this.viewDivId+'-'+this.namingField+'">Name</label>'
+             + '<div id="f-'+this.viewDivId+'-'+this.namingField+'"></div>'
+             + '<label for="f-'+this.viewDivId+'-sku">SKU</label>'
+             + '<div id="f-'+this.viewDivId+'-sku"></div>');
+    return this;
+};
+
 // override
 ProductController.prototype.generateInputFieldsForm = function (){
     return '   <label for="'+this.formDivId+'-name">Name</label> '
@@ -116,5 +139,40 @@ ProductController.prototype.generateInputFieldsForm = function (){
          // igotitList No editable here
 };
 
-// dialod for readonly
+// Could get override to retrieve more complex data
+ProductController.prototype.retrieve = function(id,readonly){
+    var data = {'extended' : 'true','id':id};
+    var controller = this;
 
+    $.ajax({
+           type: "GET",
+           url: this.API_GET,
+           data: data,
+           success: function(data)
+           {
+                if (data.constructor === Array){
+                    controller.retrieveBrand(data[0], readonly);
+                }
+           }
+         });
+};
+
+// this should be private
+ProductController.prototype.retrieveBrand = function(productData,readonly){
+    var data = {'extended' : 'false'};
+    data['id'] = productData['brandid'];
+    var controller = this;
+
+    $.ajax({
+           type: "GET",
+           url: '/brands',
+           data: data,
+           success: function(data)
+           {
+                if (data.constructor === Array){
+                    productData['brand'] = data[0].name;
+                    controller.displayData(productData, readonly);
+                }
+           }
+         });
+};
