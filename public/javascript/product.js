@@ -129,14 +129,14 @@ ProductController.prototype.generateInputFieldsForm = function (){
          // Missing -- LISTS
          // shoppingOnlineLinkList (list); storeList (list); igotitList (list)
          // 
-         // SKU, brandedIgotitId, name, brand
+         // SKU, brandedIgotitId, name, brand (EDITABLE)
          //   showld be onli accessible to Brand (people with  Write rigths)
          //        Brand should have themselves as a reseller to
          //        
-         // shoppingOnlineLinkList, storeList
+         // shoppingOnlineLinkList, storeList (READ ONLY)
          //    Are external links, and are editable by Resellers which has
          //    WRITE access to the pertinent tables
-         // igotitList No editable here
+         // igotitList No editable here ; Displayed only Top XXX; Ranking based on Usefulness// pagerank
 };
 
 // Could get override to retrieve more complex data

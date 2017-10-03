@@ -15,20 +15,23 @@ and open the template in the editor.
         <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
         <script type="text/javascript" src="/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
         <script type="text/javascript" src="/libs/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlDisplay.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlTable.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlAutocomplete.js"></script>
         <script type="text/javascript" src="/javascript/controller.js"></script>
         <script type="text/javascript" src="/javascript/product.js"></script>
         <script type="text/javascript" src="/javascript/brand.js"></script>
         <script>
             $(document).ready(function() {
                 var brandController = new BrandController();
-                brandController.setFilterDiv("filter-brand")
-                        .setFormDivId("brand-dialog-form")
+                brandController.autocomplete.setDivId("filter-brand")
+                        .bind();
+                brandController.display.setFormDivId("brand-dialog-form")
                         .setViewDivId("brand-dialog-display")
-                        .setTableId("brand-table");
-                brandController.bindAutocomplete();
-                brandController.populateTable();
-                brandController.generateFormDialog()
-                brandController.generateViewDialog();
+                        .generateFormDialog()
+                        .generateViewDialog();
+                brandController.table.setTableId("brand-table")
+                        .populateTable();
             });
         </script>
     </head>
