@@ -94,12 +94,12 @@ AhlTable.prototype.refresh = function(){
            url: this.API_GET,
            success: function(dataSet)
            {
-                controller.tableLoad(dataSet);
+                controller.load(dataSet);
            }
          });
 };
 
-AhlTable.prototype.tableLoad = function(dataSet){
+AhlTable.prototype.load = function(dataSet){
     if (this.table !== null){
         this.table.clear(0);
         this.table.rows.add(dataSet);
