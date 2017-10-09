@@ -108,7 +108,16 @@ function ProductController(){
 ProductController.prototype.init = function(){
     var fields = {'sku':'SKU','brandLink':'Brand Link'};    // #TODO Brand should be diplayed but read only
     var columns = {'brand':'Brand','sku':'SKU','brandLink':'Brand Link'};
-    this.display.setFields(fields);
+    this.display.editFields.setReadOnlyField ('id','id');
+    this.display.editFields.setTextField('name','product');
+    this.display.editFields.setReadOnlyField ('brand','brand');
+    this.display.editFields.setTextField('sku','SKU');
+    this.display.editFields.setTextField('brandLink','Brand Link');
+    this.display.viewFields.setReadOnlyField ('id','id');
+    this.display.viewFields.setReadOnlyField('name','product');
+    this.display.viewFields.setReadOnlyField ('brand','brand');
+    this.display.viewFields.setReadOnlyField ('sku','SKU');
+    this.display.viewFields.setReadOnlyField('brandLink','Brand Link');
     this.table.setColumns(columns);
 };
 

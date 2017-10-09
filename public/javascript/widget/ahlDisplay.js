@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 
+/* global ahlForm */
+
 
 function AhlDisplay(api_get, api_post,refreshFunction ){
     this.namingField = "name";
@@ -11,10 +13,9 @@ function AhlDisplay(api_get, api_post,refreshFunction ){
     this.API_GET = api_get;
     this.API_POST = api_post;
     this.refresh = refreshFunction;
-    this.fields = {};
     
-    this.formDivId = "";
-    this.viewDivId = "";
+    this.viewFields = new AhlForm('');
+    this.editFields = new AhlForm('');
 }
 
 AhlDisplay.prototype.setNamingField = function(name){
@@ -25,99 +26,39 @@ AhlDisplay.prototype.setIdentifyingField = function(id){
     this.identifyingField = id;
 };
 
-AhlDisplay.prototype.setFormDivId = function (divId) {
-    this.formDivId = divId;
-    return this;
-};
-
 AhlDisplay.prototype.setViewDivId = function (divId) {
-    this.viewDivId = divId;
+    this.viewFields.setDivId(divId);
     return this;
 };
 
-AhlDisplay.prototype.setFields = function (fields) {
-    this.fields = fields;
+AhlDisplay.prototype.setEditDivId = function (divId) {
+    this.editFields.setDivId(divId);
     return this;
 };
 
 AhlDisplay.prototype.getDialog = function (readonly) {
-    return (readonly)?$("#"+this.viewDivId).dialog()
-    : $("#"+this.formDivId).dialog();
-};
-
-AhlDisplay.prototype.getInput = function (name) {
-    return $('#'+this.formDivId+' input[name="'+name+'"]');
-};
-
-AhlDisplay.prototype.getDisplayField = function (name) {
-    return $('#f-'+this.viewDivId+'-'+name+'');
-};
-
-AhlDisplay.prototype.getIdInput = function () {
-    return this.getInput(this.identifyingField);
-};
-
-AhlDisplay.prototype.getNameInput = function () {
-    return this.getInput(this.namingField);
+    var divId = (readonly)?this.viewFields.divId: this.editFields.divId;
+    return $("#"+divId).dialog();
 };
 
 AhlDisplay.prototype.displayDataField = function (fieldname,fieldValue){
-    this.getInput(fieldname).val(fieldValue);
-    this.getDisplayField(fieldname).html(fieldValue);
-    return this;
-};
-
-AhlDisplay.prototype.generateInputFieldsForm = function (){
-    var domInputFields = "";
-    for (var field in this.fields){
-        var fieldName = this.fields[field];
-        domInputFields += '<label for="'+this.formDivId+'-'+field+'">'
-                        +    fieldName
-                        + '</label> '
-                        + '<input type="text" name="'+field+'" '
-                        +       'id="'+this.formDivId+'-'+field+'"'
-                        +       'value="" class="text ui-widget-content ui-corner-all"/> ';
-    }
-    return domInputFields;
-};
-
-AhlDisplay.prototype.generateForm = function (){
-     var div = $("#"+this.formDivId);
-     div.html('<form> '
-             + '<div id="p-'+this.formDivId+'-id"> id: </div>'
-             + '<fieldset> '
-             +    '<label for="'+this.formDivId+'-'+this.namingField+'">Name</label> '
-             +    '<input type="text" name="'+this.namingField+'" '
-             +           'id="'+this.formDivId+'-'+this.namingField+'"'
-             +           'value="" class="text ui-widget-content ui-corner-all"/> '
-             +      this.generateInputFieldsForm()
-             + '   <input type="hidden" name="id" id="'+this.formDivId+'-id" value=""> '
-             + '   <input type="submit" tabindex="-1" style="position:absolute; top:-1000px"> '
-             + '</fieldset> '
-             + '</form>');
+    this.viewFields.updateValue(fieldname,fieldValue);
+    this.editFields.updateValue(fieldname,fieldValue);
     return this;
 };
 
 AhlDisplay.prototype.generateView = function (){
-     var div = $("#"+this.viewDivId);
-     var domDiv = '<label for="f-'+this.viewDivId+'-'+this.identifyingField+'">ID</label>'
-             + '<div id="f-'+this.viewDivId+'-'+this.identifyingField+'"></div>'
-             + '<label for="f-'+this.viewDivId+'-'+this.namingField+'">Name</label>'
-             + '<div id="f-'+this.viewDivId+'-'+this.namingField+'"></div>';
-     
-    for (var field in this.fields){
-        var fieldName = this.fields[field];
-        domDiv += '<label for="f-'+this.viewDivId+'-'+field+'">'
-                +    fieldName
-                + '</label> '
-                + '<div id="f-'+this.viewDivId+'-'+field+'"></div> ';
-    }
-     div.html( domDiv);
+    this.viewFields.generateHtml();
+    return this;
+};
+
+AhlDisplay.prototype.generateEdit = function (){
+    this.editFields.generateHtml();
     return this;
 };
 
 AhlDisplay.prototype.generateViewDialog   = function (){
-     var div = $("#"+this.viewDivId);
+     var div = $("#"+this.viewFields.divId);
      this.generateView();
      div.dialog({
       autoOpen: false,
@@ -135,10 +76,10 @@ AhlDisplay.prototype.generateViewDialog   = function (){
     return this;
 };
 
-AhlDisplay.prototype.generateFormDialog = function (){
-     var div = $("#"+this.formDivId);
+AhlDisplay.prototype.generateEditDialog = function (){
+     var div = $("#"+this.editFields.divId);
      var controller = this;
-     this.generateForm();
+     this.generateEdit();
      div.dialog({
       autoOpen: false,
       height: 400,
@@ -146,7 +87,7 @@ AhlDisplay.prototype.generateFormDialog = function (){
       modal: true,
       buttons: {
         "Update": function(){
-            var arrInputs = $('#'+controller.formDivId+' input');
+            var arrInputs = $('#'+controller.editFields.divId+' input');
             var data = {};
             for (var i in arrInputs){
                 var input=arrInputs[i];
@@ -187,8 +128,6 @@ AhlDisplay.prototype.openRecord = function(id,readonly){
 };
 
 AhlDisplay.prototype.displayData = function (data, readonly){
-   var pId = $('#p-'+this.formDivId+'-id');
-   pId.html('id: '+data["id"]);
    for(var fieldname in data){
         var fieldValue = data[fieldname];
         this.displayDataField(fieldname,fieldValue);

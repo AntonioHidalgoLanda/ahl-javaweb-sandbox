@@ -28,9 +28,14 @@ function BrandController(){
 
 
 BrandController.prototype.init = function(){
-    var fields = {'pageurl':'Page URL'};
-    this.display.setFields(fields);
-    this.table.setColumns(fields);
+    var columns = {'pageurl':'Page URL'};
+    this.display.editFields.setReadOnlyField ('id','id');
+    this.display.editFields.setTextField('name','brand');
+    this.display.editFields.setTextField('pageurl','Page URL');
+    this.display.viewFields.setReadOnlyField ('id','id');
+    this.display.viewFields.setReadOnlyField('name','brand');
+    this.display.viewFields.setReadOnlyField('pageurl','Page URL');
+    this.table.setColumns(columns);
 };
 
 
