@@ -29,7 +29,7 @@ function BrandController(){
 
 BrandController.prototype.init = function(){
     var columns = {'pageurl':'Page URL'};
-    this.display.editFields.setReadOnlyField ('id','id');
+    this.display.editFields.setIdField ('id','id');
     this.display.editFields.setTextField('name','brand');
     this.display.editFields.setTextField('pageurl','Page URL');
     this.display.viewFields.setReadOnlyField ('id','id');

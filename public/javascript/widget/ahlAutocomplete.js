@@ -6,20 +6,29 @@
 
 function AhlAutocomplete(api_get,api_post, refreshFunction){
     this.namingField = "name";
+    this.hiddenFieldName = "id";
     this.identifyingField = "id";
     this.API_GET = api_get;
     this.API_POST = api_post;
     this.refresh = refreshFunction;
+    this.bIsbound = false;
     
     this.filterDiv = "";
 }
 
 AhlAutocomplete.prototype.setNamingField = function(name){
     this.namingField = name;
+    return this;
 };
 
 AhlAutocomplete.prototype.setIdentifyingField = function(id){
     this.identifyingField = id;
+    return this;
+};
+
+AhlAutocomplete.prototype.setHiddenFieldName = function(name){
+    this.hiddenFieldName = name;
+    return this;
 };
 
 AhlAutocomplete.prototype.setDivId = function (divId) {
@@ -33,7 +42,7 @@ AhlAutocomplete.prototype.generateDiv = function () {
         var filterDom = $( "#"+this.filterDiv );
         filterDom.html("<label for=\""+this.filterDiv+"-"+this.namingField+"\">Select </label>"
                 + "<input id=\""+this.filterDiv+"-"+this.namingField+"\">"
-                + "<input type=\"hidden\" id=\""+this.filterDiv+"-"+this.identifyingField+"\" name=\"id\">");
+                + "<input type=\"hidden\" id=\""+this.filterDiv+"-"+this.identifyingField+"\" name=\""+this.hiddenFieldName+"\">");
     };
     return this;
 };
@@ -50,9 +59,38 @@ AhlAutocomplete.prototype.select = function ( id , name) {
     }
 };
 
+AhlAutocomplete.prototype.selectById = function (id){
+    var controller = this;
+    var data = {'extended' : 'false'};
+    data['id'] = id;
+    $.ajax({
+        type: "GET",
+        url: this.API_GET,
+        data: data,
+        success: function(data)
+        {
+            if (data.length === 1){
+                var idx = Object.keys(data)[0];
+                var item = data[idx];
+                controller.select(item.id,item.name);
+            }
+            else if (data.length <= 0){
+                $("#"+controller.filterDiv+"-"+controller.identifyingField).val(-1);
+                $("#"+controller.filterDiv+"-"+controller.namingField).val('');
+            }
+            else{
+                console.log('autocomplete overflow. Select by id, is returning more than 1 records.');
+            }
+        }
+      });
+}
+;
 AhlAutocomplete.prototype.bind = function (){
+        if (this.bIsbound)
+            return this;
         var controller = this;
         this.generateDiv();
+        this.bIsbound = true;
         $( "#"+this.filterDiv+"-"+this.namingField ).autocomplete({
             source: function (request, response){
                 var data = {'extended' : 'false'};

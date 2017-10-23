@@ -106,11 +106,13 @@ function ProductController(){
 }
 
 ProductController.prototype.init = function(){
-    var fields = {'sku':'SKU','brandLink':'Brand Link'};    // #TODO Brand should be diplayed but read only
+    var brandAutocomplete = new AhlAutocomplete('/brands', '/brand', function(){
+        alert('New Brand Created');
+    });
     var columns = {'brand':'Brand','sku':'SKU','brandLink':'Brand Link'};
-    this.display.editFields.setReadOnlyField ('id','id');
+    this.display.editFields.setIdField ('id','id');
     this.display.editFields.setTextField('name','product');
-    this.display.editFields.setReadOnlyField ('brand','brand');
+    this.display.editFields.setAutocompleteField ('brandid','brand',brandAutocomplete);
     this.display.editFields.setTextField('sku','SKU');
     this.display.editFields.setTextField('brandLink','Brand Link');
     this.display.viewFields.setReadOnlyField ('id','id');

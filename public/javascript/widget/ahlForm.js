@@ -31,6 +31,10 @@ function AhlForm(divId){
             case 'text':
             case 'input':
                 return this.fieldTextToHtml(fieldId);
+            case 'autocomplete':
+                return this.fieldAutocompleteToHtml(fieldId);
+            case 'id':
+            return this.fieldIdToHtml(fieldId);
             default :
                 return this.fieldReadOnlyToHtml(fieldId);
         }
@@ -56,6 +60,32 @@ function AhlForm(divId){
          return html;
     };
     
+    this.fieldIdToHtml = function(fieldId){
+        var field = this.fields[fieldId];
+        var html = '';
+        if (field.show){
+            html += '<label for="f-'+this.divId+'-'+fieldId+'">'
+                 +    field.label
+                 + '</label> '
+                 + '<div id="'+this.divId+'-'+fieldId+'-show"></div> ';
+        }
+        html += ' <input type="hidden" name="'+fieldId+'" '
+             +       'id="'+this.divId+'-'+fieldId+'"'
+             +       'value="" class="text ui-widget-content ui-corner-all"/> ';
+         return html;
+    };
+    
+    this.fieldAutocompleteToHtml = function(fieldId){
+        var field = this.fields[fieldId];
+        var autocomplete = field.autocomplete;
+        autocomplete.setDivId(this.divId+'-'+fieldId);
+        var html = '<label for="'+autocomplete.filterDiv+'">'
+                 +    field.label
+                 + '</label> '
+                 + '<div id="'+autocomplete.filterDiv+'"></div> ';
+        return html;
+    };
+    
     this.getFieldDom = function(fieldId){
         return $('#'+this.divId+'-'+fieldId);
     };
@@ -67,6 +97,21 @@ function AhlForm(divId){
     this.updateField = function(fieldId, value){
         this.getFieldDom(fieldId).val(value);
     };
+    
+    this.updateIdField = function(fieldId, value){
+        var field = this.fields[fieldId];
+        if (field.show){
+            this.getFieldDom(fieldId+'-show').html(value);
+        }
+        this.getFieldDom(fieldId).val(value);
+    };
+    
+    this.updateAutocomplete = function(fieldId, value){
+        var field = this.fields[fieldId];
+        var autocomplete = field.autocomplete;
+        autocomplete.bind();
+        autocomplete.selectById(value);
+    };
 }
 
 
@@ -74,6 +119,9 @@ AhlForm.prototype.setDivId = function (divId){
     this.divId = divId;
 };
 
+AhlForm.prototype.setIdField = function (name, label, bShow){
+    this.fields[name]={'type':'id', 'label':label, 'show':bShow};
+};
 
 AhlForm.prototype.setReadOnlyField = function (name, label){
     this.fields[name]={'type':'readOnly','label':label};
@@ -81,6 +129,12 @@ AhlForm.prototype.setReadOnlyField = function (name, label){
 
 AhlForm.prototype.setTextField = function (name, label ){
     this.fields[name]={'type':'text','label':label};
+};
+
+AhlForm.prototype.setAutocompleteField = function (name, label, autocomplete ){
+    autocomplete.setIdentifyingField(name)
+            .setHiddenFieldName(name);
+    this.fields[name]={'type':'autocomplete','label':label,'autocomplete':autocomplete};
 };
 
 // 
@@ -91,6 +145,8 @@ AhlForm.prototype.updateValue = function (fieldId, value){
         switch (type.toLowerCase()){
             case 'readonly':
                 return this.updatePlainText(fieldId,value);
+            case 'autocomplete':
+                return this.updateAutocomplete(fieldId,value);
             default :
                 return this.updateField(fieldId,value);
         }
