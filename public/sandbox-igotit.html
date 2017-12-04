@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <link rel="stylesheet" type="text/css" href="/libs/jquery-ui-1.12.1/jquery-ui.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/libs/DataTables/datatables.min.css"/>
+        <link rel="stylesheet" type="text/css" href="/css/dialog.css"/>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script type="text/javascript" src="/libs/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="/libs/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="/libs/DataTables/datatables.min.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlForm.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlDisplay.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlTable.js"></script>
+        <script type="text/javascript" src="/javascript/widget/ahlAutocomplete.js"></script>
+        <script type="text/javascript" src="/javascript/product.js"></script>
+        <script type="text/javascript" src="/javascript/brand.js"></script>
+        <script type="text/javascript" src="/javascript/igotit.js"></script>
+        <script>
+            $(document).ready(function() {
+                var igotitCtrl = new IgotitController();
+                igotitCtrl.display.setEditDivId("igotit-dialog-form")
+                        .setViewDivId("igotit-dialog-display")
+                        .generateEditDialog()
+                        .generateViewDialog();
+                igotitCtrl.wall.setId("igotit-wall")
+                //      .setFilter()
+                        .fetch();
+            });
+        </script>
+    </head>
+    <body>
+        <div id="igotit-dialog-form" title="Post Form"></div>
+        <div id="igotit-dialog-display" title="Post Form"></div>
+        <h1>I GOT IT</h1>
+        <div>
+            <div class="example-container igotit">
+                <h2>Wall</h2><!-- list and edit -->
+                <table id="igotit-wall" class="table table-striped table-bordered table-hover dt-responsive nowrap" cellspacing="0" width="100%">
+                </table>
+            </div>
+            <!-- Friend Wall -->
+            <!-- Product Associated Posts -->
+        </div>
+    </body>
+</html>

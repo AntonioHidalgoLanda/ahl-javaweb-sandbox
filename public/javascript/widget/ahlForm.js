@@ -34,7 +34,17 @@ function AhlForm(divId){
             case 'autocomplete':
                 return this.fieldAutocompleteToHtml(fieldId);
             case 'id':
-            return this.fieldIdToHtml(fieldId);
+                return this.fieldIdToHtml(fieldId);
+            case 'selectbox':
+            case 'ratingPicker':
+            case 'photo':
+            case 'productPicker':
+            case 'tags':
+            case 'icon':
+            case 'coordinateDisplay':
+            case 'dateDisplay':
+            case 'list':
+                console.log("AhlForm.fieldToHtml() has not been completed for the type "+type);
             default :
                 return this.fieldReadOnlyToHtml(fieldId);
         }
@@ -135,6 +145,49 @@ AhlForm.prototype.setAutocompleteField = function (name, label, autocomplete ){
     autocomplete.setIdentifyingField(name)
             .setHiddenFieldName(name);
     this.fields[name]={'type':'autocomplete','label':label,'autocomplete':autocomplete};
+};
+
+AhlForm.prototype.setSelectboxField = function (name, label){
+    this.fields[name]={'type':'selectbox','label':label};
+};
+
+AhlForm.prototype.setCoordinatesField = function (name, label){
+    this.fields[name]={'type':'coordinatePicker','label':label};
+};
+
+AhlForm.prototype.setRatingField = function (name, label){
+    this.fields[name]={'type':'ratingPicker','label':label};
+};
+
+// Especial, upload file + photo list + camera controller
+AhlForm.prototype.setPhotoField = function (name, label){
+    this.fields[name]={'type':'photo','label':label};
+};
+
+// Especial, product "autocomplete"  
+AhlForm.prototype.setProductPickerField = function (name, label){
+    this.fields[name]={'type':'productPicker','label':label};
+};  
+
+AhlForm.prototype.setTagField = function (name, label){
+    this.fields[name]={'type':'tags','label':label};
+};
+
+// Especial, field with an icon with hover text
+AhlForm.prototype.setReadOnlyIcon = function (name, label){
+    this.fields[name]={'type':'icon','label':label};
+};
+
+AhlForm.prototype.setReadOnlyCoodinates = function (name, label){
+    this.fields[name]={'type':'coordinateDisplay','label':label};
+};
+
+AhlForm.prototype.setReadOnlyDate = function (name, label){
+    this.fields[name]={'type':'dateDisplay','label':label};
+};
+
+AhlForm.prototype.setReadOnlyList = function (name, label){
+    this.fields[name]={'type':'list','label':label};
 };
 
 // 
