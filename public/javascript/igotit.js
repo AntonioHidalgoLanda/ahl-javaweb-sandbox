@@ -93,27 +93,38 @@ function IgotitController(){
 
 IgotitController.prototype.init = function(){
     // Fields: id, publishdate, enduserid, visibility, usercomment, coordinates, accessLevel, rating, photoList, productList, tagList
+    console.log("AhlSelectboxInput has not been completed");
+    console.log("AhlCoordinatesPickerInput has not been completed");
+    console.log("AhlRatingPickerInput has not been completed");
+    console.log("AhlPhotoInput has not been completed");
+    console.log("AhlProductPickerInput has not been completed");
+    console.log("AhlTagInput has not been completed");
+    console.log("AhlIconInput has not been completed");
+    console.log("AhlCoodinatesInput has not been completed");
+    console.log("AhlDateInput has not been completed");
+    console.log("AhlListInput has not been completed");
+     
     this.display.editFields.setIdField ('id','id');
     this.display.editFields.setReadOnlyField('publish date','publishdate');
     this.display.editFields.setReadOnlyField ('enduser','user');
-    this.display.editFields.setSelectboxField ('visibility','visibility');      // Especial, Selectbox controller
-    this.display.editFields.setCoordinatesField('coordinates','coordinates');   // Especial, Coordinate controller
-    this.display.editFields.setRatingField('rating','rating');                  // Especial, rating controller
+    this.display.editFields.setField( new AhlSelectboxInput ('visibility','visibility'));      // Especial, Selectbox controller
+    this.display.editFields.setField( new AhlCoordinatesPickerInput('coordinates','coordinates'));   // Especial, Coordinate controller
+    this.display.editFields.setField( new AhlRatingPickerInput('rating','rating'));                  // Especial, rating controller
     this.display.editFields.setTextField('usercomment','comment');
-    this.display.editFields.setPhotoField('photoList','photos');                // Especial, upload file + photo list + camera controller
-    this.display.editFields.setProductPickerField('productList','products');    // Especial, product "autocomplete"              
-    this.display.editFields.setTagField('tagList','tags');                      // Especial, Tags controller
+    this.display.editFields.setField( new AhlPhotoInput('photoList','photos'));                // Especial, upload file + photo list + camera controller
+    this.display.editFields.setField( new AhlProductPickerInput('productList','products'));    // Especial, product "autocomplete"              
+    this.display.editFields.setField( new AhlTagInput('tagList','tags'));                      // Especial, Tags controller
     
     this.display.viewFields.setReadOnlyField ('id','id');
     this.display.viewFields.setReadOnlyField('publish date','publishdate');     // Especial, These fields have custom CSS
     this.display.viewFields.setReadOnlyField ('enduser','user');                // Needs to convert enduserid into user (name)
-    this.display.viewFields.setReadOnlyIcon ('visibility','visibility');        // Especial, field with an icon with hover text
-    this.display.viewFields.setReadOnlyCoodinates('coordinates','coordinates'); // Especial, field to show a map
-    this.display.viewFields.setReadOnlyDate('rating','rating');                 // Especial, display ratings
+    this.display.viewFields.setField( new AhlIconInput ('visibility','visibility'));        // Especial, field with an icon with hover text
+    this.display.viewFields.setField( new AhlCoodinatesInput('coordinates','coordinates')); // Especial, field to show a map
+    this.display.viewFields.setField( new AhlDateInput('rating','rating'));                 // Especial, display ratings
     this.display.viewFields.setReadOnlyField('usercomment','comment');
-    this.display.viewFields.setReadOnlyList('photoList','photos');              // Especial, handle lists
-    this.display.viewFields.setReadOnlyList('productList','products');
-    this.display.viewFields.setReadOnlyList('tagList','tags');
+    this.display.viewFields.setField( new AhlListInput('photoList','photos'));              // Especial, handle lists
+    this.display.viewFields.setField( new AhlListInput('productList','products'));
+    this.display.viewFields.setField( new AhlListInput('tagList','tags'));
     
     // We need to configure the wall here
     //this.wall.setColumns(columns);
