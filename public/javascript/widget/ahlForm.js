@@ -4,27 +4,15 @@
  * and open the template in the editor.
  * 
  * 
- * #Future Elements
- * table (read only)
- * hiden
- * Select (name, label, listOption)
- * Autocomplete
- * Multiselect (name, label, listOption)
- * Radio
- * Checkbox
- * Calendar
  * 
  */
-
-
-
 
 function AhlForm(divId){
     this.fields = {};
     this.divId = divId;
     
     this.fields['id']= new AhlIdInput('id', 'id', true);   
-}
+};
 
 
 AhlForm.prototype.setDivId = function (divId){
