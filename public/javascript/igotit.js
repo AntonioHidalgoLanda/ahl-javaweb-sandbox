@@ -52,7 +52,7 @@ $("#submitButtonId").click(function() {
  */
 
 
-/* global ahlDisplay, ahlTable, ahlAutocomplete */
+/* global ahlDisplay, ahlTable, ahlAutocomplete, AhlSelectboxInput, AhlCoordinatesPickerInput, AhlRatingPickerInput, AhlPhotoInput, AhlProductPickerInput, AhlTagInput, AhlIconInput, AhlCoodinatesInput, AhlDateInput, AhlListInput */
 
 function IgotitController(){
     var that = this;
@@ -93,17 +93,7 @@ function IgotitController(){
 
 IgotitController.prototype.init = function(){
     // Fields: id, publishdate, enduserid, visibility, usercomment, coordinates, accessLevel, rating, photoList, productList, tagList
-    console.log("AhlSelectboxInput has not been completed");
-    console.log("AhlCoordinatesPickerInput has not been completed");
-    console.log("AhlRatingPickerInput has not been completed");
-    console.log("AhlPhotoInput has not been completed");
-    console.log("AhlProductPickerInput has not been completed");
-    console.log("AhlTagInput has not been completed");
-    console.log("AhlIconInput has not been completed");
-    console.log("AhlCoodinatesInput has not been completed");
-    console.log("AhlDateInput has not been completed");
-    console.log("AhlListInput has not been completed");
-     
+    
     this.display.editFields.setIdField ('id','id');
     this.display.editFields.setReadOnlyField('publish date','publishdate');
     this.display.editFields.setReadOnlyField ('enduser','user');
