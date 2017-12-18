@@ -9,16 +9,26 @@
 AhlSelectboxInput.prototype = new AhlBasicInput();
 AhlSelectboxInput.prototype.constructor = AhlSelectboxInput;
 
-function AhlSelectboxInput(label,fieldId){
+// Map label with font awesome: 
+// Map value: 
+
+function AhlSelectboxInput(label,fieldId, mapValuesLabel){
     AhlBasicInput.call(this,label,fieldId);
+    this.mapValuesLabel = mapValuesLabel;
 }
 
 AhlSelectboxInput.prototype.fieldToHtml = function (){
-    console.log("AhlSelectboxInput has not been completed");
+    var html = '<select id="'+this.divId+'-'+this.fieldId+'" '
+             +      ' name="'+this.fieldId+'" class="ui-widget-content ui-corner-all"> '
+             +  ' <option value=""> </option>';
+    for (var olabel in this.mapValuesLabel){
+        html+=  ' <option value="'+this.mapValuesLabel[olabel]+'">'+olabel+'</option> ';
+    }
+    html += '</select>';
     return "";
 };
 
 AhlSelectboxInput.prototype.update = function(value){
-    console.log("AhlSelectboxInput has not been completed");
+    this.getFieldDom().val(value).change();
     return this;
 };

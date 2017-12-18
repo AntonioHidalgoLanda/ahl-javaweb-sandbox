@@ -7,6 +7,9 @@ and open the template in the editor.
     Created on : 26-Sep-2017, 23:00:12
     Author     : antonio
 */
+
+.ui-dialog-content {font-family:FontAwesome;}
+
 .ui-dialog-content label,
 .ui-dialog-content input { display:block; }
 
